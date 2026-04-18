@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kaya Juwelier – Altın Fiyatları</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-icon">♦</span>
+      <div>
+        <h1>Kaya Juwelier</h1>
+        <p class="tagline">Güncel Altın Fiyatları</p>
+      </div>
+    </div>
+    <div class="status-bar">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Bağlanıyor...</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="last-updated">
+      Son güncelleme: <span id="last-updated">—</span>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card gold-24">
+        <div class="card-label">24 Ayar Altın</div>
+        <div class="card-purity">999.9</div>
+        <div class="card-price" id="price-24k">—</div>
+        <div class="card-unit">EUR / gram</div>
+      </div>
+
+      <div class="card gold-22">
+        <div class="card-label">22 Ayar Altın</div>
+        <div class="card-purity">916.6</div>
+        <div class="card-price" id="price-22k">—</div>
+        <div class="card-unit">EUR / gram</div>
+      </div>
+
+      <div class="card gold-21">
+        <div class="card-label">21 Ayar Altın</div>
+        <div class="card-purity">875.0</div>
+        <div class="card-price" id="price-21k">—</div>
+        <div class="card-unit">EUR / gram</div>
+      </div>
+
+      <div class="card gold-18">
+        <div class="card-label">18 Ayar Altın</div>
+        <div class="card-purity">750.0</div>
+        <div class="card-price" id="price-18k">—</div>
+        <div class="card-unit">EUR / gram</div>
+      </div>
+    </div>
+
+    <div class="ounce-row">
+      <span class="ounce-label">Ons (Troy oz) fiyatı:</span>
+      <span class="ounce-price" id="price-oz">—</span>
+      <span class="ounce-currency">EUR</span>
+    </div>
+  </main>
+
+  <footer>
+    <p>Fiyatlar her dakika güncellenir. Sadece bilgi amaçlıdır.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
