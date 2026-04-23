@@ -6,7 +6,7 @@ class LivePulse extends StatefulWidget {
   final Object? trigger;
   final Color color;
 
-  const LivePulse({super.key, this.trigger, this.color = AppTheme.priceUp});
+  const LivePulse({super.key, this.trigger, this.color = AppTheme.gold});
 
   @override
   State<LivePulse> createState() => _LivePulseState();

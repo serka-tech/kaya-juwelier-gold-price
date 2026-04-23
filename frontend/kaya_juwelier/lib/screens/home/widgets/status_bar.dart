@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/services/signalr_service.dart';
 
 class StatusBar extends StatelessWidget {
@@ -7,28 +8,39 @@ class StatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, label) = switch (status) {
-      ConnectionStatus.live        => (Colors.green,  'Canlı veri'),
-      ConnectionStatus.demo        => (Colors.amber,  'Demo modu'),
-      ConnectionStatus.reconnecting => (Colors.orange, 'Yeniden bağlanıyor...'),
-      ConnectionStatus.error       => (Colors.red,    'Bağlantı hatası'),
-      ConnectionStatus.connecting  => (Colors.grey,   'Bağlanıyor...'),
+    final (dotColor, bgColor, label) = switch (status) {
+      ConnectionStatus.live         => (AppTheme.priceUp,   AppTheme.priceUpBg,   'Canlı'),
+      ConnectionStatus.demo         => (Colors.amber,       const Color(0xFFFFFBEB), 'Demo'),
+      ConnectionStatus.reconnecting => (Colors.orange,      const Color(0xFFFFF7ED), 'Bağlanıyor'),
+      ConnectionStatus.error        => (AppTheme.priceDown, AppTheme.priceDownBg, 'Hata'),
+      ConnectionStatus.connecting   => (AppTheme.textHint,  AppTheme.surfaceAlt,  'Bağlanıyor'),
     };
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 8, height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: color.withAlpha(128), blurRadius: 6)],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6, height: 6,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Text(label, style: TextStyle(color: color, fontSize: 13)),
-      ],
+          const SizedBox(width: 5),
+          Text(label,
+            style: TextStyle(
+              color: dotColor, fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

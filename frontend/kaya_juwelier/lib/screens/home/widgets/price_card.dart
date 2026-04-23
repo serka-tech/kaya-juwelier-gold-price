@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
-import 'package:kaya_juwelier/screens/home/widgets/animated_price_text.dart';
 
 class PriceCard extends StatefulWidget {
   final String label;
   final String fineness;
   final double price;
   final Color  accentColor;
-  final String currencyLabel; // e.g. "EUR / gram"
+  final String currencyLabel;
 
   const PriceCard({
     super.key,
@@ -15,7 +15,7 @@ class PriceCard extends StatefulWidget {
     required this.fineness,
     required this.price,
     required this.accentColor,
-    this.currencyLabel = 'EUR / gram',
+    this.currencyLabel = 'EUR/g',
   });
 
   @override
@@ -24,123 +24,178 @@ class PriceCard extends StatefulWidget {
 
 class _PriceCardState extends State<PriceCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _flashController;
-  late Animation<Color?> _flashColor;
+  late AnimationController _flashCtrl;
+  late Animation<Color?> _bgColor;
   double? _prevPrice;
   bool _isUp = true;
 
   @override
   void initState() {
     super.initState();
-    _flashController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _flashCtrl = AnimationController(
+      duration: const Duration(milliseconds: 900),
       vsync: this,
     );
-    _flashColor = ColorTween(begin: Colors.transparent, end: Colors.transparent)
-        .animate(_flashController);
+    _bgColor = ColorTween(
+      begin: Colors.transparent, end: Colors.transparent,
+    ).animate(_flashCtrl);
   }
 
   @override
-  void didUpdateWidget(PriceCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_prevPrice != null && oldWidget.price != widget.price) {
-      _isUp = widget.price > oldWidget.price;
-      _flashColor = ColorTween(
-        begin: (_isUp ? AppTheme.priceUp : AppTheme.priceDown).withAlpha(80),
+  void didUpdateWidget(PriceCard old) {
+    super.didUpdateWidget(old);
+    if (_prevPrice != null && old.price != widget.price) {
+      _isUp = widget.price > old.price;
+      _bgColor = ColorTween(
+        begin: (_isUp ? AppTheme.priceUp : AppTheme.priceDown).withAlpha(25),
         end:   Colors.transparent,
-      ).animate(CurvedAnimation(parent: _flashController, curve: Curves.easeOut));
-      _flashController
-        ..reset()
-        ..forward();
+      ).animate(CurvedAnimation(parent: _flashCtrl, curve: Curves.easeOut));
+      _flashCtrl..reset()..forward();
     }
-    _prevPrice = oldWidget.price;
+    _prevPrice = old.price;
   }
 
   @override
   void dispose() {
-    _flashController.dispose();
+    _flashCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0.00', 'de_DE');
+    final hasChange = _prevPrice != null && _prevPrice != widget.price;
+
     return AnimatedBuilder(
-      animation: _flashColor,
-      builder: (context, child) => Container(
+      animation: _bgColor,
+      builder: (_, __) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: _flashColor.value,
+          color: _bgColor.value ?? AppTheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppTheme.subtleShadow,
         ),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row: label + fineness badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Left accent stripe
+              Positioned(
+                left: 0, top: 0, bottom: 0,
+                child: Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: widget.accentColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
+                    ),
+                  ),
+                ),
+              ),
+              // Card content
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        widget.label,
-                        style: const TextStyle(
+                    // Top row: label + fineness badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.label,
+                          style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
-                            fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: widget.accentColor.withAlpha(20),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            widget.fineness,
+                            style: TextStyle(
+                              color: widget.accentColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: widget.accentColor),
-                        borderRadius: BorderRadius.circular(4),
+                    const SizedBox(height: 10),
+
+                    // Price
+                    Text(
+                      fmt.format(widget.price),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
                       ),
-                      child: Text(widget.fineness,
-                          style: TextStyle(
-                              color: widget.accentColor, fontSize: 10)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Bottom row: currency + direction badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.currencyLabel,
+                          style: const TextStyle(
+                            color: AppTheme.textHint, fontSize: 11,
+                          ),
+                        ),
+                        if (hasChange)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _isUp
+                                  ? AppTheme.priceUpBg
+                                  : AppTheme.priceDownBg,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isUp
+                                      ? Icons.arrow_upward_rounded
+                                      : Icons.arrow_downward_rounded,
+                                  color: _isUp
+                                      ? AppTheme.priceUp
+                                      : AppTheme.priceDown,
+                                  size: 10,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  _isUp ? 'Arttı' : 'Düştü',
+                                  style: TextStyle(
+                                    color: _isUp
+                                        ? AppTheme.priceUp
+                                        : AppTheme.priceDown,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-
-                // Price row with change arrow
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: AnimatedPriceText(
-                        price: widget.price,
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ),
-                    if (_prevPrice != null && _prevPrice != widget.price)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Icon(
-                          _isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                          color: _isUp ? AppTheme.priceUp : AppTheme.priceDown,
-                          size: 20,
-                        ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 2),
-                Text(
-                  widget.currencyLabel,
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

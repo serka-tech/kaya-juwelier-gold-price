@@ -16,18 +16,18 @@ class KayaJuwelierApp extends StatelessWidget {
       DeviceOrientation.landscapeRight,
     ]);
 
-    // Style the Android status bar to match our dark theme
+    // Style the Android status bar for light theme
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: AppTheme.background,
-      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: AppTheme.surface,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ));
 
     return MaterialApp(
       title: 'Kaya Juwelier',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
       home: const HomeScreen(),
       builder: (context, child) {
         // Ensure text doesn't scale beyond 1.2x regardless of system setting

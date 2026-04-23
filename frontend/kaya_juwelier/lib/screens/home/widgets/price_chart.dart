@@ -13,77 +13,63 @@ class PriceChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final range = ref.watch(chartRangeProvider);
-    final karat = ref.watch(chartKaratProvider);
+    final range     = ref.watch(chartRangeProvider);
+    final karat     = ref.watch(chartKaratProvider);
     final dataAsync = ref.watch(chartDataProvider(range));
     final statsAsync = ref.watch(priceStatsProvider(range.value));
+
+    const karatLabels = {
+      ChartKarat.k24:  '24K',
+      ChartKarat.k22:  '22K',
+      ChartKarat.k18:  '18K',
+      ChartKarat.troy: 'Ons',
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 16),
+
+        // ── Stats row (above chart) ────────────────────────────────────
+        statsAsync.when(
+          loading: () => const SizedBox(height: 36),
+          error:   (e, _) => const SizedBox.shrink(),
+          data: (stats) => stats.open == 0
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: StatsRow(stats: stats),
+                ),
+        ),
+
         // ── Karat selector ────────────────────────────────────────────
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: ChartKarat.values.map((k) {
-              final labels = {
-                ChartKarat.k24: '24K',
-                ChartKarat.k22: '22K',
-                ChartKarat.k18: '18K',
-                ChartKarat.troy: 'Troy oz',
-              };
               final selected = karat == k;
               return Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: ChoiceChip(
-                  label: Text(labels[k]!),
-                  selected: selected,
-                  onSelected: (_) =>
-                      ref.read(chartKaratProvider.notifier).set(k),
-                  selectedColor: AppTheme.gold,
-                  labelStyle: TextStyle(
-                    color: selected ? Colors.black : AppTheme.textSecondary,
-                    fontWeight:
-                        selected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  backgroundColor: AppTheme.surface,
-                  side: BorderSide.none,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // ── Range selector ────────────────────────────────────────────
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: ChartRange.values.map((r) {
-              final selected = range == r;
-              return Padding(
-                padding: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.only(right: 8),
                 child: GestureDetector(
-                  onTap: () =>
-                      ref.read(chartRangeProvider.notifier).set(r),
+                  onTap: () => ref.read(chartKaratProvider.notifier).set(k),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
+                        horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? AppTheme.gold : AppTheme.surface,
+                      color: selected ? AppTheme.gold : AppTheme.surfaceAlt,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      r.label,
+                      karatLabels[k]!,
                       style: TextStyle(
                         color: selected
-                            ? Colors.black
+                            ? Colors.white
                             : AppTheme.textSecondary,
                         fontSize: 12,
                         fontWeight: selected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -92,48 +78,79 @@ class PriceChart extends ConsumerWidget {
             }).toList(),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // ── Chart area ────────────────────────────────────────────────
         SizedBox(
-          height: 200,
+          height: 180,
           child: dataAsync.when(
             loading: () => const Center(
-              child: CircularProgressIndicator(color: AppTheme.gold),
+              child: CircularProgressIndicator(
+                  color: AppTheme.gold, strokeWidth: 2),
             ),
-            error: (e, _) => _buildEmpty(),
-            data: (points) =>
-                points.isEmpty ? _buildEmpty() : _buildChart(points, karat, range),
+            error:   (e, _) => _buildEmpty(),
+            data: (points) => points.isEmpty
+                ? _buildEmpty()
+                : _buildChart(points, karat, range),
           ),
         ),
+        const SizedBox(height: 16),
 
-        // ── Stats row ─────────────────────────────────────────────────
-        statsAsync.when(
-          loading: () => const SizedBox(height: 40),
-          error: (e, _) => const SizedBox.shrink(),
-          data: (stats) => stats.open == 0
-              ? const SizedBox.shrink()
-              : StatsRow(stats: stats),
+        // ── Range selector ────────────────────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: ChartRange.values.map((r) {
+            final selected = range == r;
+            return GestureDetector(
+              onTap: () => ref.read(chartRangeProvider.notifier).set(r),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected ? AppTheme.gold : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  r.label,
+                  style: TextStyle(
+                    color: selected ? Colors.white : AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: selected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
+        const SizedBox(height: 4),
       ],
     );
   }
 
-  Widget _buildEmpty() => const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bar_chart, color: AppTheme.textSecondary, size: 36),
-            SizedBox(height: 8),
-            Text(
-              'Grafik verisi henüz yok\n(Veri birikiyor...)',
-              textAlign: TextAlign.center,
-              style:
-                  TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-            ),
-          ],
+  Widget _buildEmpty() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 52, height: 52,
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceAlt,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.show_chart_rounded,
+              color: AppTheme.textHint, size: 28),
         ),
-      );
+        const SizedBox(height: 10),
+        const Text(
+          'Grafik verisi birikiyor...',
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildChart(
       List<ChartPoint> points, ChartKarat karat, ChartRange range) {
@@ -147,94 +164,99 @@ class PriceChart extends ConsumerWidget {
       return FlSpot(e.key.toDouble(), y);
     }).toList();
 
-    final prices = spots.map((s) => s.y).toList();
-    final minY = prices.reduce((a, b) => a < b ? a : b);
-    final maxY = prices.reduce((a, b) => a > b ? a : b);
-    final padding = ((maxY - minY) * 0.12).clamp(0.01, double.infinity);
+    final prices  = spots.map((s) => s.y).toList();
+    final minY    = prices.reduce((a, b) => a < b ? a : b);
+    final maxY    = prices.reduce((a, b) => a > b ? a : b);
+    final pad     = ((maxY - minY) * 0.15).clamp(0.01, double.infinity);
+    final isUp    = spots.last.y >= spots.first.y;
+    final lineCol = isUp ? AppTheme.priceUp : AppTheme.priceDown;
 
-    // Determine line color based on first vs last price
-    final lineColor = spots.last.y >= spots.first.y
-        ? AppTheme.priceUp
-        : AppTheme.priceDown;
-
-    String formatX(int index) {
-      if (index < 0 || index >= points.length) return '';
-      final t = points[index].t.toLocal();
+    String fmtX(int i) {
+      if (i < 0 || i >= points.length) return '';
+      final t = points[i].t.toLocal();
       return switch (range) {
-        ChartRange.h1 => DateFormat('HH:mm').format(t),
-        ChartRange.d1 => DateFormat('HH:mm').format(t),
-        ChartRange.d5 => DateFormat('dd/MM').format(t),
-        ChartRange.m1 => DateFormat('dd/MM').format(t),
-        ChartRange.m3 => DateFormat('MMM dd').format(t),
-        ChartRange.y1 => DateFormat('MMM yy').format(t),
+        ChartRange.h1 || ChartRange.d1 => DateFormat('HH:mm').format(t),
+        ChartRange.d5 || ChartRange.m1 => DateFormat('dd/MM').format(t),
+        ChartRange.m3 || ChartRange.y1 => DateFormat('MMM').format(t),
       };
     }
 
     final xInterval =
-        (spots.length / 5).ceil().toDouble().clamp(1.0, double.infinity);
+        (spots.length / 4).ceil().toDouble().clamp(1.0, double.infinity);
 
     return LineChart(
       LineChartData(
         backgroundColor: AppTheme.surface,
-        minY: minY - padding,
-        maxY: maxY + padding,
+        minY: minY - pad,
+        maxY: maxY + pad,
         clipData: const FlClipData.all(),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
           horizontalInterval: ((maxY - minY) / 4).clamp(0.001, double.infinity),
           getDrawingHorizontalLine: (_) => const FlLine(
-            color: Color(0x22FFFFFF),
+            color: AppTheme.divider,
             strokeWidth: 1,
           ),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          leftTitles: AxisTitles(
+          leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 56,
-              getTitlesWidget: (value, meta) => Text(
-                karat == ChartKarat.troy
-                    ? value.toStringAsFixed(0)
-                    : value.toStringAsFixed(2),
-                style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 9),
+              reservedSize: 52,
+              getTitlesWidget: (value, meta) => Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Text(
+                  karat == ChartKarat.troy
+                      ? value.toStringAsFixed(0)
+                      : value.toStringAsFixed(2),
+                  style: const TextStyle(
+                    color: AppTheme.textHint, fontSize: 9,
+                  ),
+                ),
               ),
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 20,
+              reservedSize: 22,
               interval: xInterval,
               getTitlesWidget: (value, meta) {
                 final idx = value.round();
                 if (idx % xInterval.round() != 0) return const SizedBox();
-                return Text(
-                  formatX(idx),
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 9),
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    fmtX(idx),
+                    style: const TextStyle(
+                      color: AppTheme.textHint, fontSize: 9,
+                    ),
+                  ),
                 );
               },
             ),
           ),
-          rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false)),
           topTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false)),
         ),
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => const Color(0xFF2A2A3E),
+            getTooltipColor: (_) => AppTheme.textPrimary,
+            tooltipRoundedRadius: 10,
             getTooltipItems: (touchedSpots) => touchedSpots
                 .map((s) => LineTooltipItem(
-                      '€ ${s.y.toStringAsFixed(karat == ChartKarat.troy ? 2 : 4)}',
-                      const TextStyle(
-                          color: AppTheme.gold,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
-                    ))
+                  karat == ChartKarat.troy
+                      ? '€ ${s.y.toStringAsFixed(2)}'
+                      : '€ ${s.y.toStringAsFixed(2)}/g',
+                  const TextStyle(
+                    color: Colors.white, fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ))
                 .toList(),
           ),
         ),
@@ -242,9 +264,9 @@ class PriceChart extends ConsumerWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            curveSmoothness: 0.3,
-            color: lineColor,
-            barWidth: 2,
+            curveSmoothness: 0.35,
+            color: lineCol,
+            barWidth: 2.5,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
@@ -252,15 +274,15 @@ class PriceChart extends ConsumerWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  lineColor.withValues(alpha: 0.25),
-                  lineColor.withValues(alpha: 0.0),
+                  lineCol.withValues(alpha: 0.18),
+                  lineCol.withValues(alpha: 0.0),
                 ],
               ),
             ),
           ),
         ],
       ),
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 250),
     );
   }
 }

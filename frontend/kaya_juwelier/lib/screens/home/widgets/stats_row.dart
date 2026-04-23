@@ -5,33 +5,52 @@ import 'package:kaya_juwelier/models/price_stats_model.dart';
 
 class StatsRow extends StatelessWidget {
   final PriceStats stats;
-
   const StatsRow({super.key, required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    final fmt = NumberFormat('#,##0.00', 'de_DE');
-    final chgColor =
-        stats.isPositive ? AppTheme.priceUp : AppTheme.priceDown;
-    final chgSign = stats.isPositive ? '+' : '';
+    final fmt      = NumberFormat('#,##0.00', 'de_DE');
+    final isUp     = stats.isPositive;
+    final chgColor = isUp ? AppTheme.priceUp : AppTheme.priceDown;
+    final chgBg    = isUp ? AppTheme.priceUpBg : AppTheme.priceDownBg;
+    final chgSign  = isUp ? '+' : '';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _Stat(label: 'Açılış', value: fmt.format(stats.open)),
-          _Divider(),
-          _Stat(label: 'En Yüksek', value: fmt.format(stats.high),
+          _StatBox(label: 'Açılış',     value: fmt.format(stats.open)),
+          _StatBox(label: 'En Yüksek',  value: fmt.format(stats.high),
               valueColor: AppTheme.priceUp),
-          _Divider(),
-          _Stat(label: 'En Düşük', value: fmt.format(stats.low),
+          _StatBox(label: 'En Düşük',   value: fmt.format(stats.low),
               valueColor: AppTheme.priceDown),
-          _Divider(),
-          _Stat(
-            label: 'Değişim',
-            value: '$chgSign${stats.changePercent.toStringAsFixed(2)}%',
-            valueColor: chgColor,
+          // Change % — pill style
+          Expanded(
+            child: Column(
+              children: [
+                const Text('Değişim',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 10,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: chgBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$chgSign${stats.changePercent.toStringAsFixed(2)}%',
+                    style: TextStyle(
+                      color: chgColor, fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -39,31 +58,31 @@ class StatsRow extends StatelessWidget {
   }
 }
 
-class _Stat extends StatelessWidget {
+class _StatBox extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
-
-  const _Stat({required this.label, required this.value, this.valueColor});
+  const _StatBox({required this.label, required this.value, this.valueColor});
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 10)),
-          const SizedBox(height: 2),
-          Text(value,
-              style: TextStyle(
-                  color: valueColor ?? AppTheme.textPrimary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold)),
-        ],
-      );
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) =>
-      Container(height: 24, width: 1, color: AppTheme.cardBorder);
+  Widget build(BuildContext context) => Expanded(
+    child: Column(
+      children: [
+        Text(label,
+          style: const TextStyle(
+            color: AppTheme.textSecondary, fontSize: 10,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(value,
+          style: TextStyle(
+            color: valueColor ?? AppTheme.textPrimary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    ),
+  );
 }

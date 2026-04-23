@@ -3,10 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 
 class TroyOunceRow extends StatelessWidget {
-  final double priceTroyOz;     // EUR
-  final double priceUsdOz;      // USD
+  final double priceTroyOz;
+  final double priceUsdOz;
   final DateTime updatedAt;
-  final String currency;        // 'EUR' or 'USD'
+  final String currency;
 
   const TroyOunceRow({
     super.key,
@@ -18,73 +18,101 @@ class TroyOunceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmtEur = NumberFormat('#,##0.00', 'de_DE');
-    final fmtUsd = NumberFormat('#,##0.00', 'en_US');
+    final fmtEur  = NumberFormat('#,##0.00', 'de_DE');
+    final fmtUsd  = NumberFormat('#,##0.00', 'en_US');
     final fmtTime = DateFormat('HH:mm:ss');
 
-    final displayPrice = currency == 'USD' ? priceUsdOz : priceTroyOz;
-    final displayFmt   = currency == 'USD' ? fmtUsd : fmtEur;
-    final symbol       = currency == 'USD' ? '\$' : '€';
+    final eurFmt = fmtEur.format(priceTroyOz);
+    final usdFmt = fmtUsd.format(priceUsdOz);
+    final timeStr = fmtTime.format(updatedAt.toLocal());
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.gold.withAlpha(80)),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.subtleShadow,
       ),
       child: Row(
         children: [
-          // Gold coin icon
+          // Au coin
           Container(
-            width: 36,
-            height: 36,
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.gold.withAlpha(30),
-              border: Border.all(color: AppTheme.gold.withAlpha(100)),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFE8C84A), Color(0xFFC9A227)],
+              ),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: const Center(
-              child: Text('Au', style: TextStyle(
-                  color: AppTheme.gold,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold)),
+              child: Text('Au',
+                style: TextStyle(
+                  color: Colors.white, fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
+
+          // Prices
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Ons (Troy oz)',
-                    style: TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12)),
-                const SizedBox(height: 2),
-                Text(
-                  '$symbol ${displayFmt.format(displayPrice)}',
-                  style: const TextStyle(
-                      color: AppTheme.gold,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
+                const Text('Troy Ons',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text('€ $eurFmt',
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('\$ $usdFmt',
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          // Last update time
+
+          // Timestamp
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text('Son güncelleme',
-                  style: TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 10)),
-              const SizedBox(height: 2),
-              Text(
-                fmtTime.format(updatedAt.toLocal()),
-                style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 12,
-                    fontFamily: 'monospace'),
+                style: TextStyle(color: AppTheme.textHint, fontSize: 10)),
+              const SizedBox(height: 3),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceAlt,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  timeStr,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
               ),
             ],
           ),

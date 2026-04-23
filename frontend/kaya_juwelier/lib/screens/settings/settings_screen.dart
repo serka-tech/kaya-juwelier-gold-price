@@ -12,85 +12,140 @@ class SettingsScreen extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AYARLAR')),
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Ayarlar'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: AppTheme.textPrimary, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
-          // ── Currency section ──────────────────────────────────────
-          _SectionHeader('Para Birimi'),
+          // ── Currency ─────────────────────────────────────────────
+          _Section(title: 'Para Birimi'),
           _Card(
-            child: SwitchListTile(
-              title: const Text('USD / EUR',
-                  style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: Text(
-                currency == 'EUR'
-                    ? 'Gram altın fiyatı EUR olarak gösteriliyor'
-                    : 'Gram altın fiyatı USD olarak gösteriliyor',
-                style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 12),
-              ),
-              value: currency == 'USD',
-              activeThumbColor: AppTheme.gold,
-              activeTrackColor: AppTheme.gold.withAlpha(100),
-              onChanged: (_) => ref.read(currencyProvider.notifier).toggle(),
-              secondary: Text(
-                currency,
-                style: TextStyle(
-                  color: AppTheme.gold,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(
+                      color: AppTheme.goldGlow,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.currency_exchange_rounded,
+                        color: AppTheme.gold, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Para Birimi',
+                          style: TextStyle(
+                            color: AppTheme.textPrimary, fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          currency == 'EUR'
+                              ? 'Euro (€) olarak gösteriliyor'
+                              : 'Dolar (\$) olarak gösteriliyor',
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Toggle pill
+                  GestureDetector(
+                    onTap: () => ref.read(currencyProvider.notifier).toggle(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceAlt,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _CurrencyTab(label: 'EUR', active: currency == 'EUR'),
+                          _CurrencyTab(label: 'USD', active: currency == 'USD'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // ── Connection section ────────────────────────────────────
-          _SectionHeader('Bağlantı'),
+          // ── Connection ────────────────────────────────────────────
+          _Section(title: 'Bağlantı'),
           _Card(
             child: Column(
               children: [
-                _InfoTile(
+                _InfoRow(
                   icon: Icons.hub_outlined,
+                  iconBg: const Color(0xFFEEF2FF),
+                  iconColor: const Color(0xFF6366F1),
                   label: 'SignalR Hub',
                   value: AppConstants.signalRHubUrl,
                 ),
-                const Divider(color: AppTheme.cardBorder, height: 1),
-                _InfoTile(
+                const Divider(color: AppTheme.divider, height: 1, indent: 60),
+                _InfoRow(
                   icon: Icons.api_outlined,
+                  iconBg: const Color(0xFFECFDF5),
+                  iconColor: AppTheme.priceUp,
                   label: 'API Adresi',
                   value: AppConstants.apiBaseUrl,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // ── About section ─────────────────────────────────────────
-          _SectionHeader('Hakkında'),
+          // ── About ─────────────────────────────────────────────────
+          _Section(title: 'Hakkında'),
           _Card(
             child: Column(
               children: [
-                _InfoTile(
+                _InfoRow(
                   icon: Icons.storefront_outlined,
+                  iconBg: AppTheme.goldGlow,
+                  iconColor: AppTheme.gold,
                   label: 'Uygulama',
                   value: 'Kaya Juwelier Altın Takip',
                 ),
-                const Divider(color: AppTheme.cardBorder, height: 1),
-                _InfoTile(
+                const Divider(color: AppTheme.divider, height: 1, indent: 60),
+                _InfoRow(
                   icon: Icons.data_object_outlined,
+                  iconBg: const Color(0xFFF0F9FF),
+                  iconColor: const Color(0xFF0EA5E9),
                   label: 'Veri Kaynağı',
                   value: 'Finnhub WebSocket (OANDA)',
                 ),
-                const Divider(color: AppTheme.cardBorder, height: 1),
-                _InfoTile(
-                  icon: Icons.sync_outlined,
-                  label: 'Güncelleme Sıklığı',
+                const Divider(color: AppTheme.divider, height: 1, indent: 60),
+                _InfoRow(
+                  icon: Icons.bolt_outlined,
+                  iconBg: const Color(0xFFFFFBEB),
+                  iconColor: Colors.amber,
+                  label: 'Güncelleme',
                   value: 'Gerçek zamanlı (saniye bazlı)',
                 ),
-                const Divider(color: AppTheme.cardBorder, height: 1),
-                _InfoTile(
+                const Divider(color: AppTheme.divider, height: 1, indent: 60),
+                _InfoRow(
                   icon: Icons.storage_outlined,
+                  iconBg: const Color(0xFFF5F3FF),
+                  iconColor: const Color(0xFF8B5CF6),
                   label: 'Veri Saklama',
                   value: '1 yıl (MySQL)',
                 ),
@@ -101,43 +156,51 @@ class SettingsScreen extends ConsumerWidget {
 
           // ── Disclaimer ────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.cardBorder),
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFFDE68A)),
             ),
-            child: const Text(
-              '⚠️  Buradaki fiyatlar yalnızca bilgi amaçlıdır. '
-              'Yatırım tavsiyesi niteliği taşımaz. Kaya Juwelier, '
-              'bu fiyatlara dayanılarak yapılan işlemlerden sorumlu değildir.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
-              textAlign: TextAlign.center,
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    color: Colors.amber, size: 18),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Buradaki fiyatlar yalnızca bilgi amaçlıdır. '
+                    'Yatırım tavsiyesi niteliği taşımaz.',
+                    style: TextStyle(
+                      color: Color(0xFF92400E), fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
+class _Section extends StatelessWidget {
   final String title;
-  const _SectionHeader(this.title);
+  const _Section({required this.title});
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 8),
-        child: Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-            color: AppTheme.gold,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(left: 2, bottom: 10),
+    child: Text(title,
+      style: const TextStyle(
+        color: AppTheme.textSecondary, fontSize: 12,
+        fontWeight: FontWeight.w600, letterSpacing: 0.5,
+      ),
+    ),
+  );
 }
 
 class _Card extends StatelessWidget {
@@ -146,32 +209,85 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.cardBorder),
-        ),
-        child: child,
-      );
+    decoration: BoxDecoration(
+      color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: AppTheme.subtleShadow,
+    ),
+    child: child,
+  );
 }
 
-class _InfoTile extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
   final String label;
   final String value;
 
-  const _InfoTile(
-      {required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
 
   @override
-  Widget build(BuildContext context) => ListTile(
-        leading: Icon(icon, color: AppTheme.gold, size: 20),
-        title: Text(label,
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12)),
-        subtitle: Text(value,
-            style: const TextStyle(
-                color: AppTheme.textPrimary, fontSize: 13)),
-        dense: true,
-      );
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    child: Row(
+      children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: iconBg, borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 18),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                style: const TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(value,
+                style: const TextStyle(
+                  color: AppTheme.textPrimary, fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _CurrencyTab extends StatelessWidget {
+  final String label;
+  final bool active;
+  const _CurrencyTab({required this.label, required this.active});
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: const Duration(milliseconds: 200),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+    decoration: BoxDecoration(
+      color: active ? AppTheme.gold : Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Text(label,
+      style: TextStyle(
+        color: active ? Colors.white : AppTheme.textSecondary,
+        fontSize: 12, fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
 }
