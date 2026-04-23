@@ -1,3 +1,16 @@
-node_modules/
+# .NET
+bin/
+obj/
+*.user
+.vs/
+appsettings.Development.json
+
+# Flutter
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Environment
 .env
 *.log
