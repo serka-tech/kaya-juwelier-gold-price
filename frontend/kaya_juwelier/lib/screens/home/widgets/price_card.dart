@@ -68,7 +68,7 @@ class _PriceCardState extends State<PriceCard>
 
     return AnimatedBuilder(
       animation: _bgColor,
-      builder: (_, __) => Container(
+      builder: (context, child) => Container(
         decoration: BoxDecoration(
           color: _bgColor.value ?? AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
