@@ -9,18 +9,19 @@ class StatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (dotColor, bgColor, label) = switch (status) {
-      ConnectionStatus.live         => (AppTheme.priceUp,   AppTheme.priceUpBg,   'Canlı'),
+      ConnectionStatus.live         => (AppTheme.priceUp,   AppTheme.priceUpBg,     'Canlı'),
       ConnectionStatus.demo         => (Colors.amber,       const Color(0xFFFFFBEB), 'Demo'),
       ConnectionStatus.reconnecting => (Colors.orange,      const Color(0xFFFFF7ED), 'Bağlanıyor'),
-      ConnectionStatus.error        => (AppTheme.priceDown, AppTheme.priceDownBg, 'Hata'),
-      ConnectionStatus.connecting   => (AppTheme.textHint,  AppTheme.surfaceAlt,  'Bağlanıyor'),
+      ConnectionStatus.error        => (AppTheme.priceDown, AppTheme.priceDownBg,   'Hata'),
+      ConnectionStatus.connecting   => (AppTheme.textHint,  AppTheme.surfaceAlt,    'Bağlanıyor'),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: dotColor.withAlpha(50)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

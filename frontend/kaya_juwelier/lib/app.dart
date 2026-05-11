@@ -27,7 +27,7 @@ class KayaJuwelierApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kaya Juwelier',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       home: const HomeScreen(),
       builder: (context, child) {
         // Ensure text doesn't scale beyond 1.2x regardless of system setting

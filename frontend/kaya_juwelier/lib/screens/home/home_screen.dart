@@ -1,311 +1,501 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
-import 'package:kaya_juwelier/models/gold_price_model.dart';
+import 'package:kaya_juwelier/models/chart_point_model.dart';
 import 'package:kaya_juwelier/providers/chart_provider.dart';
 import 'package:kaya_juwelier/providers/gold_price_provider.dart';
-import 'package:kaya_juwelier/screens/home/widgets/live_pulse.dart';
-import 'package:kaya_juwelier/screens/home/widgets/price_card.dart';
+import 'package:kaya_juwelier/screens/home/widgets/app_drawer.dart';
+import 'package:kaya_juwelier/screens/home/widgets/gold_price_row.dart';
 import 'package:kaya_juwelier/screens/home/widgets/price_chart.dart';
 import 'package:kaya_juwelier/screens/home/widgets/status_bar.dart';
-import 'package:kaya_juwelier/screens/home/widgets/troy_ounce_row.dart';
+import 'package:kaya_juwelier/screens/home/widgets/ticker_strip.dart';
+import 'package:kaya_juwelier/screens/home/widgets/turkish_gold_section.dart';
+import 'package:kaya_juwelier/models/turkish_gold_model.dart';
+import 'package:kaya_juwelier/providers/commission_provider.dart';
+import 'package:kaya_juwelier/providers/upload_provider.dart';
 import 'package:kaya_juwelier/screens/settings/settings_screen.dart';
 import 'package:kaya_juwelier/services/signalr_service.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final priceAsync  = ref.watch(goldPriceStreamProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final statusAsync = ref.watch(connectionStatusProvider);
     final currency    = ref.watch(currencyProvider);
 
     final status = statusAsync.when(
       data:    (s) => s,
       loading: () => ConnectionStatus.connecting,
-      error:   (e, st) => ConnectionStatus.error,
-    );
-
-    final lastPrice = priceAsync.when(
-      data: (p) => p, loading: () => null, error: (e, s) => null,
+      error:   (e, _) => ConnectionStatus.error,
     );
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          // ── Sticky top app bar ─────────────────────────────────────
-          SliverAppBar(
-            pinned: true,
-            floating: false,
-            expandedHeight: 0,
-            backgroundColor: AppTheme.surface,
-            surfaceTintColor: Colors.transparent,
-            shadowColor: AppTheme.divider,
-            elevation: 0.5,
-            titleSpacing: 20,
-            title: Row(
-              children: [
-                Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.goldGlow,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text('K',
-                      style: TextStyle(
-                        color: AppTheme.gold, fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Text('Kaya Juwelier',
-                  style: TextStyle(
-                    color: AppTheme.textPrimary, fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              // Status indicator
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: StatusBar(status: status),
-              ),
-              if (status == ConnectionStatus.live && lastPrice != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
-                  child: LivePulse(trigger: lastPrice.updatedAt),
-                ),
-              // Currency toggle
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                child: GestureDetector(
-                  onTap: () => ref.read(currencyProvider.notifier).toggle(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.goldGlow,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(currency,
-                      style: const TextStyle(
-                        color: AppTheme.gold, fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Settings
-              IconButton(
-                icon: const Icon(Icons.tune_rounded,
-                    color: AppTheme.textSecondary, size: 22),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
-              ),
-              const SizedBox(width: 4),
-            ],
-          ),
-
-          // ── Pull-to-refresh wrapper ─────────────────────────────────
-          CupertinoSliverRefreshControl(
-            onRefresh: () async {
-              final service = ref.read(signalRServiceProvider);
-              await service.connect();
-              ref.invalidate(chartDataProvider);
-            },
-          ),
-
-          // ── Body content ────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: priceAsync.when(
-              loading: () => _buildLoading(),
-              error:   (e, _) => _buildError(e),
-              data:    (price) => _buildBody(context, ref, price, currency),
-            ),
-          ),
+      drawer: AppDrawer(
+        selectedIndex: _selectedIndex,
+        onTap: (i) => setState(() => _selectedIndex = i),
+      ),
+      appBar: _buildAppBar(status, currency),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: const [
+          _PricesTab(),
+          _ChartTab(),
+          SettingsScreen(embedded: true),
         ],
       ),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    WidgetRef ref,
-    GoldPriceModel price,
-    String currency,
-  ) {
-    final eurUsd = price.eurUsdRate > 0 ? price.eurUsdRate : 1.10;
-    double toDisplay(double eurGram) =>
-        currency == 'USD' ? eurGram * eurUsd : eurGram;
+  PreferredSizeWidget _buildAppBar(ConnectionStatus status, String currency) {
+    final logoUrl = ref.watch(uploadManifestProvider).asData?.value.fullLogoUrl();
 
-    final p24 = toDisplay(price.priceGram24K);
-    final p22 = toDisplay(price.priceGram22K);
-    final p21 = toDisplay(price.priceGram21K);
-    final p18 = toDisplay(price.priceGram18K);
-    final currencyLabel = currency == 'USD' ? 'USD/g' : 'EUR/g';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > 600;
-    final pad = isWide ? 24.0 : 16.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Hero section ─────────────────────────────────────────────
-        _HeroSection(price: price, currency: currency, eurUsd: eurUsd),
-
-        // ── Section label ─────────────────────────────────────────────
-        Padding(
-          padding: EdgeInsets.fromLTRB(pad, 20, pad, 12),
-          child: const Text('Altın Fiyatları',
-            style: TextStyle(
-              color: AppTheme.textPrimary, fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+    return AppBar(
+      backgroundColor: AppTheme.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      titleSpacing: 0,
+      leading: Builder(
+        builder: (ctx) => IconButton(
+          icon: const Icon(Icons.menu_rounded,
+              color: AppTheme.textSecondary, size: 22),
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
         ),
-
-        // ── Price cards grid ─────────────────────────────────────────
-        isWide
-            ? Padding(
-                padding: EdgeInsets.symmetric(horizontal: pad),
-                child: Row(children: [
-                  Expanded(child: PriceCard(label: '24 Ayar', fineness: '999.9', price: p24, accentColor: const Color(0xFFC9A227), currencyLabel: currencyLabel)),
-                  const SizedBox(width: 12),
-                  Expanded(child: PriceCard(label: '22 Ayar', fineness: '916.6', price: p22, accentColor: const Color(0xFFB8960E), currencyLabel: currencyLabel)),
-                  const SizedBox(width: 12),
-                  Expanded(child: PriceCard(label: '21 Ayar', fineness: '875.0', price: p21, accentColor: const Color(0xFFA07C10), currencyLabel: currencyLabel)),
-                  const SizedBox(width: 12),
-                  Expanded(child: PriceCard(label: '18 Ayar', fineness: '750.0', price: p18, accentColor: const Color(0xFF8B6914), currencyLabel: currencyLabel)),
-                ]),
-              )
-            : Padding(
-                padding: EdgeInsets.symmetric(horizontal: pad),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.45,
-                  children: [
-                    PriceCard(label: '24 Ayar', fineness: '999.9', price: p24, accentColor: const Color(0xFFC9A227), currencyLabel: currencyLabel),
-                    PriceCard(label: '22 Ayar', fineness: '916.6', price: p22, accentColor: const Color(0xFFB8960E), currencyLabel: currencyLabel),
-                    PriceCard(label: '21 Ayar', fineness: '875.0', price: p21, accentColor: const Color(0xFFA07C10), currencyLabel: currencyLabel),
-                    PriceCard(label: '18 Ayar', fineness: '750.0', price: p18, accentColor: const Color(0xFF8B6914), currencyLabel: currencyLabel),
-                  ],
-                ),
+      ),
+      title: logoUrl != null
+          ? Image.network(
+              logoUrl,
+              height: 28,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => SvgPicture.asset(
+                'assets/juvkaya-yataylogo.svg',
+                height: 28,
+                fit: BoxFit.contain,
               ),
-
-        const SizedBox(height: 16),
-
-        // ── Troy ounce ───────────────────────────────────────────────
+            )
+          : SvgPicture.asset(
+              'assets/juvkaya-yataylogo.svg',
+              height: 28,
+              fit: BoxFit.contain,
+            ),
+      actions: [
+        // Status badge
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: pad),
-          child: TroyOunceRow(
-            priceTroyOz: price.priceTroyOz,
-            priceUsdOz:  price.priceUsdOz,
-            updatedAt:   price.updatedAt,
-            currency:    currency,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: StatusBar(status: status),
         ),
-
-        const SizedBox(height: 20),
-
-        // ── Chart section ─────────────────────────────────────────────
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: pad),
+        const SizedBox(width: 6),
+        // Currency toggle
+        GestureDetector(
+          onTap: () => ref.read(currencyProvider.notifier).toggle(),
           child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: AppTheme.cardShadow,
+              color: AppTheme.surfaceElevated,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppTheme.cardBorder),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 16, 0),
-                  child: Row(
-                    children: [
-                      const Text('Fiyat Grafiği',
-                        style: TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => ref.invalidate(chartDataProvider),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceAlt,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.refresh_rounded,
-                            color: AppTheme.textSecondary, size: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: PriceChart(),
-                ),
-                const SizedBox(height: 8),
-              ],
+            child: Text(
+              currency,
+              style: const TextStyle(
+                color: AppTheme.gold,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
         ),
-
-        const SizedBox(height: 24),
-
-        // ── Disclaimer ───────────────────────────────────────────────
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: pad),
-          child: const Text(
-            'Fiyatlar bilgi amaçlıdır, yatırım tavsiyesi değildir.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textHint, fontSize: 11),
-          ),
-        ),
-        const SizedBox(height: 32),
+        const SizedBox(width: 12),
       ],
     );
   }
 
-  Widget _buildLoading() => const SizedBox(
-    height: 400,
-    child: Center(
+  BottomNavigationBar _buildBottomNav() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: (i) => setState(() => _selectedIndex = i),
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.show_chart_rounded),
+          label: 'Fiyatlar',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.candlestick_chart_outlined),
+          label: 'Grafik',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.tune_rounded),
+          label: 'Ayarlar',
+        ),
+      ],
+    );
+  }
+}
+
+// ── Prices Tab ────────────────────────────────────────────────────────────────
+class _PricesTab extends ConsumerWidget {
+  const _PricesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceAsync = ref.watch(goldPriceStreamProvider);
+    final currency   = ref.watch(currencyProvider);
+    final statsAsync = ref.watch(priceStatsProvider(ChartRange.d1.value));
+    final chartAsync = ref.watch(chartDataProvider(ChartRange.d1));
+    final commMap    = ref.watch(commissionProvider).asData?.value ?? {};
+    final manifest   = ref.watch(uploadManifestProvider).asData?.value;
+
+    return Column(
+      children: [
+        // ── Ticker strip ───────────────────────────────────────────────
+        const TickerStrip(),
+
+        // ── Price rows ─────────────────────────────────────────────────
+        Expanded(
+          child: priceAsync.when(
+            loading: () => const _LoadingView(),
+            error:   (e, _) => const _ErrorView(),
+            data: (price) {
+              final eurUsd = price.eurUsdRate > 0 ? price.eurUsdRate : 1.10;
+              double toDisplay(double eurGram) =>
+                  currency == 'USD' ? eurGram * eurUsd : eurGram;
+
+              // Apply commission: multiply by (1 + commission%)
+              double withComm(double p, String key) =>
+                  commMap[key]?.apply(p) ?? p;
+
+              final changePct = statsAsync.whenOrNull(
+                data: (s) => s.open > 0 ? s.changePercent : null,
+              );
+
+              // Extract spark series from chart data (downsample to ~30 pts)
+              final chartPoints = chartAsync.whenOrNull(data: (pts) => pts) ?? [];
+              List<double> toSpark(List<double> full) {
+                if (full.length <= 30) return full;
+                final step = (full.length / 30).ceil();
+                return [
+                  for (int i = 0; i < full.length; i += step) full[i],
+                ];
+              }
+
+              final spark24 = toSpark(chartPoints.map((p) => toDisplay(p.price24K)).toList());
+              final spark22 = toSpark(chartPoints.map((p) => toDisplay(p.price22K)).toList());
+              // 21K not in chart model — derive from 22K
+              final spark21 = toSpark(chartPoints.map((p) => toDisplay(p.price22K * 21 / 22)).toList());
+              final spark18 = toSpark(chartPoints.map((p) => toDisplay(p.price18K)).toList());
+
+              final rows = [
+                _GoldRowData('24 Ayar', '999.9',
+                    withComm(toDisplay(price.priceGram24K), '24K'),
+                    const Color(0xFFC9A227), spark24),
+                _GoldRowData('22 Ayar', '916.6',
+                    withComm(toDisplay(price.priceGram22K), '22K'),
+                    const Color(0xFFB8960E), spark22),
+                _GoldRowData('21 Ayar', '875.0',
+                    withComm(toDisplay(price.priceGram21K), '21K'),
+                    const Color(0xFFA07C10), spark21),
+                _GoldRowData('18 Ayar', '750.0',
+                    withComm(toDisplay(price.priceGram18K), '18K'),
+                    const Color(0xFF8B6914), spark18),
+              ];
+
+              return ListView(
+                children: [
+                  // ── Turkish gold coins ─────────────────────────────────
+                  TurkishGoldSection(
+                    prices: TurkishGoldCalculator.calculate(price.priceGram22K),
+                    currencySymbol: currency == 'EUR' ? '€' : '\$',
+                    commMap: commMap,
+                    manifest: manifest,
+                  ),
+
+                  // ── Karat section header ───────────────────────────────
+                  Container(
+                    color: AppTheme.surfaceElevated,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4, height: 16,
+                          decoration: BoxDecoration(
+                            color: AppTheme.gold,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'GRAM ALTIN',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          currency == 'EUR' ? 'FİYAT (€/g)' : 'FİYAT (\$/g)',
+                          style: const TextStyle(
+                            color: AppTheme.textHint,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1, color: AppTheme.divider),
+
+                  for (int i = 0; i < rows.length; i++) ...[
+                    GoldPriceRow(
+                      karat: rows[i].karat,
+                      fineness: rows[i].fineness,
+                      price: rows[i].price,
+                      currencySymbol: currency == 'EUR' ? '€' : '\$',
+                      unit: 'gram',
+                      accentColor: rows[i].color,
+                      changePercent: changePct,
+                      sparkData: rows[i].spark,
+                    ),
+                    if (i < rows.length - 1)
+                      const Divider(height: 1, color: AppTheme.divider,
+                          indent: 68),
+                  ],
+
+                  // ── Troy ounce row ─────────────────────────────────────
+                  const Divider(height: 1, color: AppTheme.divider),
+                  _TroyRow(
+                    priceTroyOz: withComm(price.priceTroyOz, 'troy'),
+                    priceUsdOz:  withComm(price.priceUsdOz,  'troy'),
+                    currency:    currency,
+                  ),
+                  const Divider(height: 1, color: AppTheme.divider),
+                  const SizedBox(height: 8),
+
+                  // ── Last update ────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time_rounded,
+                            size: 12, color: AppTheme.textHint),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Son güncelleme: ${_formatTime(price.updatedAt)}',
+                          style: const TextStyle(
+                            color: AppTheme.textHint, fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Disclaimer ─────────────────────────────────────────
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 4, 16, 20),
+                    child: Text(
+                      'Fiyatlar bilgi amaçlıdır, yatırım tavsiyesi değildir.',
+                      style: TextStyle(
+                          color: AppTheme.textHint, fontSize: 10),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(DateTime dt) {
+    final local = dt.toLocal();
+    final h = local.hour.toString().padLeft(2, '0');
+    final m = local.minute.toString().padLeft(2, '0');
+    final s = local.second.toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+}
+
+class _GoldRowData {
+  final String karat, fineness;
+  final double price;
+  final Color color;
+  final List<double> spark;
+  const _GoldRowData(this.karat, this.fineness, this.price, this.color,
+      [this.spark = const []]);
+}
+
+// ── Troy row ──────────────────────────────────────────────────────────────────
+class _TroyRow extends StatelessWidget {
+  final double priceTroyOz;
+  final double priceUsdOz;
+  final String currency;
+
+  const _TroyRow({
+    required this.priceTroyOz,
+    required this.priceUsdOz,
+    required this.currency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.surfaceElevated,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          // Badge
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceHighlight,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.cardBorder,
+                width: 1,
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                'OZ',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Name
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Troy Ons',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  '31.1035 g · 24K',
+                  style: TextStyle(
+                    color: AppTheme.textHint, fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Prices
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '€ ${priceTroyOz.toStringAsFixed(2).replaceAll('.', ',')}',
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '\$ ${priceUsdOz.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chart Tab ─────────────────────────────────────────────────────────────────
+class _ChartTab extends StatelessWidget {
+  const _ChartTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Fiyat Grafiği',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 16),
+          PriceChart(),
+          SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Loading / Error views ─────────────────────────────────────────────────────
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: AppTheme.gold, strokeWidth: 2,
-          ),
+          CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2),
           SizedBox(height: 16),
-          Text('Fiyatlar yükleniyor...',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          Text(
+            'Fiyatlar yükleniyor...',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          ),
         ],
       ),
-    ),
-  );
+    );
+  }
+}
 
-  Widget _buildError(Object e) => SizedBox(
-    height: 400,
-    child: Center(
+class _ErrorView extends StatelessWidget {
+  const _ErrorView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -318,10 +508,11 @@ class HomeScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(Icons.wifi_off_rounded,
-                color: AppTheme.priceDown, size: 36),
+                  color: AppTheme.priceDown, size: 36),
             ),
             const SizedBox(height: 20),
-            const Text('Bağlantı kurulamadı',
+            const Text(
+              'Bağlantı kurulamadı',
               style: TextStyle(
                 color: AppTheme.textPrimary, fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -330,204 +521,13 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             const Text(
               'Sunucunun çalıştığından emin olun:\ndotnet run',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              style: TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
-    ),
-  );
-}
-
-// ── Hero section ─────────────────────────────────────────────────────────────
-class _HeroSection extends StatelessWidget {
-  final GoldPriceModel price;
-  final String currency;
-  final double eurUsd;
-
-  const _HeroSection({
-    required this.price,
-    required this.currency,
-    required this.eurUsd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = NumberFormat('#,##0.00', 'de_DE');
-    final displayPrice = currency == 'USD'
-        ? price.priceGram24K * eurUsd
-        : price.priceGram24K;
-    final symbol = currency == 'USD' ? '\$' : '€';
-
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Label
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.goldGlow,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.circle, color: AppTheme.gold, size: 7),
-                    SizedBox(width: 5),
-                    Text('Canlı Altın Fiyatı',
-                      style: TextStyle(
-                        color: AppTheme.gold, fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              // EUR/USD rate chip
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'EUR/USD  ${eurUsd.toStringAsFixed(4)}',
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Big price — 24K
-          Text(
-            '$symbol ${fmt.format(displayPrice)}',
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 38,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.0,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '24 Ayar · gram başına',
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-
-          // Troy ounce quick stat row
-          Row(
-            children: [
-              _HeroStat(
-                label: 'Troy Ons (EUR)',
-                value: '€ ${fmt.format(price.priceTroyOz)}',
-                iconBg: AppTheme.goldGlow,
-                iconColor: AppTheme.gold,
-                icon: Icons.monetization_on_outlined,
-              ),
-              const SizedBox(width: 12),
-              _HeroStat(
-                label: 'Troy Ons (USD)',
-                value: '\$ ${NumberFormat('#,##0.00', 'en_US').format(price.priceUsdOz)}',
-                iconBg: const Color(0xFFE8F5E9),
-                iconColor: AppTheme.priceUp,
-                icon: Icons.attach_money_rounded,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
-  }
-}
-
-class _HeroStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color iconBg;
-  final Color iconColor;
-  final IconData icon;
-
-  const _HeroStat({
-    required this.label,
-    required this.value,
-    required this.iconBg,
-    required this.iconColor,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: iconBg, borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 10,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(value,
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Helper pulled out to use CupertinoSliverRefreshControl
-class CupertinoSliverRefreshControl extends StatelessWidget {
-  final Future<void> Function() onRefresh;
-  const CupertinoSliverRefreshControl({super.key, required this.onRefresh});
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(child: const SizedBox.shrink());
   }
 }

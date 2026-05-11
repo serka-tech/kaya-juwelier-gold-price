@@ -2,55 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
-  // ── Light palette ──────────────────────────────────────────────────────────
-  static const Color background    = Color(0xFFF5F6FA);
-  static const Color surface       = Color(0xFFFFFFFF);
-  static const Color surfaceAlt    = Color(0xFFF0F2F8);
+  // ── Light professional palette ─────────────────────────────────────────────
+  static const Color background      = Color(0xFFF4F6FB);
+  static const Color surface         = Color(0xFFFFFFFF);
+  static const Color surfaceElevated = Color(0xFFF0F3FA);
+  static const Color surfaceHighlight = Color(0xFFE8EDF8);
 
-  // Gold accent (warm, readable on white)
-  static const Color gold          = Color(0xFFC9A227);
-  static const Color goldLight     = Color(0xFFF5E6B0);
-  static const Color goldGlow      = Color(0xFFFFF8E1);
+  // Gold brand
+  static const Color gold            = Color(0xFFC9A227);
+  static const Color goldLight       = Color(0xFFE8C84A);
+  static const Color goldDim         = Color(0xFFB8960E);
 
   // Text
-  static const Color textPrimary   = Color(0xFF1A1D2E);
-  static const Color textSecondary = Color(0xFF8B8FA8);
-  static const Color textHint      = Color(0xFFBBBECC);
+  static const Color textPrimary     = Color(0xFF0D1117);
+  static const Color textSecondary   = Color(0xFF4A5568);
+  static const Color textHint        = Color(0xFF9AA5B4);
 
   // Semantic
-  static const Color priceUp       = Color(0xFF22C55E);
-  static const Color priceDown     = Color(0xFFEF4444);
-  static const Color priceUpBg     = Color(0xFFECFDF5);
-  static const Color priceDownBg   = Color(0xFFFEF2F2);
+  static const Color priceUp         = Color(0xFF16A34A);
+  static const Color priceDown       = Color(0xFFDC2626);
+  static const Color priceUpBg       = Color(0xFFDCFCE7);
+  static const Color priceDownBg     = Color(0xFFFEE2E2);
 
-  // Borders / dividers
-  static const Color divider       = Color(0xFFEEF0F6);
-  static const Color cardBorder    = Color(0xFFE8EBF4);
+  // Borders
+  static const Color divider         = Color(0xFFE8ECF4);
+  static const Color cardBorder      = Color(0xFFE2E8F0);
 
-  // ── Card shadow ────────────────────────────────────────────────────────────
+  // Compat aliases
+  static const Color surfaceAlt      = Color(0xFFF0F3FA); // = surfaceElevated
+  static const Color goldGlow        = Color(0xFFFFF8E8); // light gold tint
+
+  // ── Shadows ────────────────────────────────────────────────────────────────
   static List<BoxShadow> get cardShadow => [
     BoxShadow(
-      color: const Color(0xFF1A1D2E).withAlpha(13),
-      blurRadius: 20,
+      color: Colors.black.withAlpha(12),
+      blurRadius: 16,
       offset: const Offset(0, 4),
-    ),
-    BoxShadow(
-      color: const Color(0xFF1A1D2E).withAlpha(6),
-      blurRadius: 6,
-      offset: const Offset(0, 1),
     ),
   ];
 
   static List<BoxShadow> get subtleShadow => [
     BoxShadow(
-      color: const Color(0xFF1A1D2E).withAlpha(10),
-      blurRadius: 12,
+      color: Colors.black.withAlpha(8),
+      blurRadius: 8,
       offset: const Offset(0, 2),
     ),
   ];
 
   // ── Theme ──────────────────────────────────────────────────────────────────
-  static ThemeData get light => ThemeData(
+  static ThemeData get dark => ThemeData(
     brightness: Brightness.light,
     scaffoldBackgroundColor: background,
     colorScheme: const ColorScheme.light(
@@ -72,19 +72,13 @@ class AppTheme {
         color: textSecondary, fontSize: 14, fontWeight: FontWeight.w500,
       ),
       bodySmall: TextStyle(color: textSecondary, fontSize: 12),
-      labelSmall: TextStyle(color: textHint, fontSize: 10),
     ),
-    cardTheme: CardThemeData(
-      color: surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: EdgeInsets.zero,
-    ),
+    dividerTheme: const DividerThemeData(color: divider, space: 1),
     appBarTheme: const AppBarTheme(
       backgroundColor: surface,
       foregroundColor: textPrimary,
       elevation: 0,
-      scrolledUnderElevation: 0,
+      scrolledUnderElevation: 0.5,
       centerTitle: false,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -93,13 +87,26 @@ class AppTheme {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       titleTextStyle: TextStyle(
-        color: textPrimary, fontSize: 20,
-        fontWeight: FontWeight.w700, letterSpacing: -0.3,
+        color: textPrimary, fontSize: 13,
+        fontWeight: FontWeight.w800, letterSpacing: 1.8,
+        fontFamily: 'Roboto',
       ),
     ),
-    dividerTheme: const DividerThemeData(color: divider, space: 1),
+    drawerTheme: const DrawerThemeData(
+      backgroundColor: surface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: surface,
+      selectedItemColor: gold,
+      unselectedItemColor: textHint,
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
+      selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+      unselectedLabelStyle: TextStyle(fontSize: 11),
+    ),
     chipTheme: ChipThemeData(
-      backgroundColor: surfaceAlt,
+      backgroundColor: surfaceElevated,
       selectedColor: gold,
       labelStyle: const TextStyle(fontSize: 12),
       side: BorderSide.none,
