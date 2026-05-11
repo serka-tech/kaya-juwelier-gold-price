@@ -43,6 +43,7 @@ builder.Services.AddSwaggerGen();
 
 // --- App Services ---
 builder.Services.AddSingleton<GoldPriceCache>();
+builder.Services.AddSingleton<MarketCache>();
 builder.Services.AddHostedService<FinnhubWebSocketService>();
 builder.Services.AddHostedService<DataPruningService>();
 

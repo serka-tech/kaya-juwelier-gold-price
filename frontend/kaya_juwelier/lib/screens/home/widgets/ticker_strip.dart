@@ -3,62 +3,83 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/providers/gold_price_provider.dart';
+import 'package:kaya_juwelier/providers/market_provider.dart';
 
 class TickerStrip extends ConsumerWidget {
   const TickerStrip({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final priceAsync = ref.watch(goldPriceStreamProvider);
-    final currency   = ref.watch(currencyProvider);
+    final priceAsync  = ref.watch(goldPriceStreamProvider);
+    final marketAsync = ref.watch(marketStreamProvider);
 
     return Container(
       height: 80,
       decoration: const BoxDecoration(
         color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.divider, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.divider, width: 1)),
       ),
       child: priceAsync.when(
         loading: () => const SizedBox.shrink(),
-        error:   (e, st) => const SizedBox.shrink(),
+        error:   (_, __) => const SizedBox.shrink(),
         data: (price) {
-          final eurUsd = price.eurUsdRate > 0 ? price.eurUsdRate : 1.10;
-          final fmtEur = NumberFormat('#,##0.00', 'de_DE');
-          final fmtUsd = NumberFormat('#,##0.00', 'en_US');
-          final fmtRate = NumberFormat('#,##0.0000', 'de_DE');
+          final fmt2  = NumberFormat('#,##0.00', 'de_DE');
+          final fmt4  = NumberFormat('#,##0.0000', 'de_DE');
+          final market = marketAsync.asData?.value;
 
-          final items = [
+          final items = <_TickerData>[
+            // ALTIN — always available from gold price stream
             _TickerData(
-              symbol: 'XAU/EUR',
-              subtitle: '24K · gram',
-              value: '€ ${fmtEur.format(price.priceGram24K)}',
-              isHighlighted: currency == 'EUR',
+              label: 'ALTIN',
+              sub: '24K · €/gram',
+              value: '€ ${fmt2.format(price.priceGram24K)}',
+              change: market?.gold.changePercent,
+              highlight: true,
             ),
+            // GÜMÜŞ
             _TickerData(
-              symbol: 'XAU/USD',
-              subtitle: 'Troy ons',
-              value: '\$ ${fmtUsd.format(price.priceUsdOz)}',
-              isHighlighted: currency == 'USD',
+              label: 'GÜMÜŞ',
+              sub: 'XAG · €/gram',
+              value: market != null && market.silver.price > 0
+                  ? '€ ${fmt4.format(market.silver.price)}'
+                  : '—',
+              change: market?.silver.changePercent,
             ),
+            // PLATİN
             _TickerData(
-              symbol: 'XAU/EUR',
-              subtitle: 'Troy ons',
-              value: '€ ${fmtEur.format(price.priceTroyOz)}',
-              isHighlighted: false,
+              label: 'PLATİN',
+              sub: 'XPT · €/gram',
+              value: market != null && market.platinum.price > 0
+                  ? '€ ${fmt2.format(market.platinum.price)}'
+                  : '—',
+              change: market?.platinum.changePercent,
             ),
+            // PALADYUM
             _TickerData(
-              symbol: 'EUR/USD',
-              subtitle: 'Kur',
-              value: fmtRate.format(eurUsd),
-              isHighlighted: false,
+              label: 'PALADYUM',
+              sub: 'XPD · €/gram',
+              value: market != null && market.palladium.price > 0
+                  ? '€ ${fmt2.format(market.palladium.price)}'
+                  : '—',
+              change: market?.palladium.changePercent,
             ),
+            // DOLAR
             _TickerData(
-              symbol: 'XAU/USD',
-              subtitle: '24K · gram',
-              value: '\$ ${fmtUsd.format(price.priceGram24K * eurUsd)}',
-              isHighlighted: false,
+              label: 'DOLAR',
+              sub: 'USD/TRY',
+              value: market != null && market.usdTry.price > 0
+                  ? '₺ ${fmt4.format(market.usdTry.price)}'
+                  : '—',
+              change: market?.usdTry.changePercent,
+            ),
+            // EURO
+            _TickerData(
+              label: 'EURO',
+              sub: 'EUR/TRY',
+              value: market != null && market.eurTry.price > 0
+                  ? '₺ ${fmt4.format(market.eurTry.price)}'
+                  : '—',
+              change: market?.eurTry.changePercent,
             ),
           ];
 
@@ -66,7 +87,7 @@ class TickerStrip extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: items.length,
-            separatorBuilder: (context, index) => Container(
+            separatorBuilder: (_, __) => Container(
               width: 1,
               margin: const EdgeInsets.symmetric(vertical: 20),
               color: AppTheme.divider,
@@ -80,16 +101,18 @@ class TickerStrip extends ConsumerWidget {
 }
 
 class _TickerData {
-  final String symbol;
-  final String subtitle;
+  final String label;
+  final String sub;
   final String value;
-  final bool isHighlighted;
+  final double? change;
+  final bool highlight;
 
   const _TickerData({
-    required this.symbol,
-    required this.subtitle,
+    required this.label,
+    required this.sub,
     required this.value,
-    required this.isHighlighted,
+    this.change,
+    this.highlight = false,
   });
 }
 
@@ -99,55 +122,84 @@ class _TickerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chg = data.change;
+    final isUp   = chg != null && chg > 0;
+    final isDown = chg != null && chg < 0;
+
+    final labelColor = data.highlight ? AppTheme.gold : AppTheme.textSecondary;
+    final valueColor = data.highlight ? AppTheme.gold : AppTheme.textPrimary;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Label row
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                data.symbol,
-                style: TextStyle(
-                  color: data.isHighlighted ? AppTheme.gold : AppTheme.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              if (data.isHighlighted) ...[
+              Text(data.label,
+                  style: TextStyle(
+                    color: labelColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  )),
+              if (data.highlight) ...[
                 const SizedBox(width: 5),
                 Container(
                   width: 5, height: 5,
                   decoration: const BoxDecoration(
-                    color: AppTheme.gold,
-                    shape: BoxShape.circle,
-                  ),
+                      color: AppTheme.gold, shape: BoxShape.circle),
                 ),
               ],
             ],
           ),
           const SizedBox(height: 3),
-          Text(
-            data.value,
-            style: TextStyle(
-              color: data.isHighlighted
-                  ? AppTheme.gold
-                  : AppTheme.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-            ),
-          ),
+          // Price
+          Text(data.value,
+              style: TextStyle(
+                color: valueColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              )),
           const SizedBox(height: 2),
-          Text(
-            data.subtitle,
-            style: const TextStyle(
-              color: AppTheme.textHint,
-              fontSize: 10,
-            ),
+          // Sub + change
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(data.sub,
+                  style: const TextStyle(
+                      color: AppTheme.textHint, fontSize: 9)),
+              if (chg != null) ...[
+                const SizedBox(width: 5),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isUp
+                        ? AppTheme.priceUpBg
+                        : isDown
+                            ? AppTheme.priceDownBg
+                            : AppTheme.surfaceElevated,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Text(
+                    '${isUp ? '+' : ''}${chg.toStringAsFixed(2)}%',
+                    style: TextStyle(
+                      color: isUp
+                          ? AppTheme.priceUp
+                          : isDown
+                              ? AppTheme.priceDown
+                              : AppTheme.textHint,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

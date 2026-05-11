@@ -6,10 +6,11 @@ class AppConstants {
     defaultValue: 'http://10.0.2.2:5000',
   );
 
-  static String get signalRHubUrl => '$apiBaseUrl/hubs/goldprice';
+  static String get signalRHubUrl   => '$apiBaseUrl/hubs/goldprice';
   static String get currentPriceUrl => '$apiBaseUrl/api/goldprice/current';
-  static String get chartUrl => '$apiBaseUrl/api/goldprice/chart';
-  static String get statsUrl => '$apiBaseUrl/api/goldprice/stats';
+  static String get chartUrl        => '$apiBaseUrl/api/goldprice/chart';
+  static String get statsUrl        => '$apiBaseUrl/api/goldprice/stats';
+  static String get marketUrl       => '$apiBaseUrl/api/market/current';
 
   // SignalR reconnect delays in milliseconds
   static const List<int> reconnectDelays = [0, 2000, 5000, 10000, 30000];

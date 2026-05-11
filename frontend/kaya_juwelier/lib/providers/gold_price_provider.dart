@@ -96,6 +96,7 @@ Future<void> _savePrice(GoldPriceModel p) async {
           'priceGram22K': p.priceGram22K,
           'priceGram21K': p.priceGram21K,
           'priceGram18K': p.priceGram18K,
+          'priceGram14K': p.priceGram14K,
           'priceTroyOz':  p.priceTroyOz,
           'priceUsdOz':   p.priceUsdOz,
           'eurUsdRate':   p.eurUsdRate,

@@ -13,6 +13,7 @@ import 'package:kaya_juwelier/screens/home/widgets/ticker_strip.dart';
 import 'package:kaya_juwelier/screens/home/widgets/turkish_gold_section.dart';
 import 'package:kaya_juwelier/models/turkish_gold_model.dart';
 import 'package:kaya_juwelier/providers/commission_provider.dart';
+import 'package:kaya_juwelier/screens/piyasalar/piyasalar_screen.dart';
 import 'package:kaya_juwelier/services/signalr_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         index: _selectedIndex,
         children: const [
           _PricesTab(),
+          PiyasalarScreen(),
           _ChartTab(),
         ],
       ),
@@ -114,6 +116,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.show_chart_rounded),
           label: 'Fiyatlar',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.bar_chart_rounded),
+          label: 'Piyasalar',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.candlestick_chart_outlined),

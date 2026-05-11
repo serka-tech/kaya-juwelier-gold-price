@@ -63,10 +63,16 @@ class AppDrawer extends StatelessWidget {
                   onTap: () { onTap(0); Navigator.pop(context); },
                 ),
                 _DrawerItem(
-                  icon: Icons.candlestick_chart_outlined,
-                  label: 'Fiyat Grafiği',
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Piyasalar',
                   selected: selectedIndex == 1,
                   onTap: () { onTap(1); Navigator.pop(context); },
+                ),
+                _DrawerItem(
+                  icon: Icons.candlestick_chart_outlined,
+                  label: 'Fiyat Grafiği',
+                  selected: selectedIndex == 2,
+                  onTap: () { onTap(2); Navigator.pop(context); },
                 ),
               ],
             ),
