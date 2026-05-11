@@ -23,6 +23,7 @@ public static class GoldPriceExtensions
         PriceGram22K: p.PriceGram22K,
         PriceGram21K: p.PriceGram21K,
         PriceGram18K: p.PriceGram18K,
+        PriceGram14K: p.PriceGram14K,
         PriceTroyOz:  p.PriceTroyOz,
         PriceUsdOz:   p.PriceUsdOz,
         EurUsdRate:   p.EurUsdRate,

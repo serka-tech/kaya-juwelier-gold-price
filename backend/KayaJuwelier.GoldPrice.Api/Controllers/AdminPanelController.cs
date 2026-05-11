@@ -187,7 +187,7 @@ const HDR = {'Content-Type':'application/json','ngrok-skip-browser-warning':'tru
 const GROUPS = {
   gram:  [{key:'24K',label:'24 Ayar Altın'},{key:'22K',label:'22 Ayar Altın'},
           {key:'21K',label:'21 Ayar Altın'},{key:'18K',label:'18 Ayar Altın'},
-          {key:'troy',label:'Troy Ons'}],
+          {key:'14K',label:'14 Ayar Altın'},{key:'troy',label:'Troy Ons'}],
   altin: [{key:'ceyrek_altin',label:'Çeyrek Altın'},{key:'yarim_altin',label:'Yarım Altın'},
           {key:'tam_altin',label:'Tam Altın'},{key:'gremse_altin',label:'Gremse Altın'},
           {key:'besli_altin',label:'Beşli Altın'}],

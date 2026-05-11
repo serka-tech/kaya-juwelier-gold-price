@@ -25,6 +25,7 @@ Tüm dosyalar **PNG** formatında olmalı ve aşağıdaki isimlerle kaydedilmeli
 | 22 Ayar Altın | `22K.png` |
 | 21 Ayar Altın | `21K.png` |
 | 18 Ayar Altın | `18K.png` |
+| 14 Ayar Altın | `14K.png` |
 | Troy Ons | `troy.png` |
 
 ---

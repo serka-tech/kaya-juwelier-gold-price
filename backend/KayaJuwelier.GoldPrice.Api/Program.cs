@@ -120,6 +120,7 @@ static async Task SeedAsync(AppDbContext db, IConfiguration config)
         ("22K",           "22 Ayar"),
         ("21K",           "21 Ayar"),
         ("18K",           "18 Ayar"),
+        ("14K",           "14 Ayar"),
         ("troy",          "Troy Ons"),
         ("ceyrek_altin",  "Çeyrek Altın"),
         ("yarim_altin",   "Yarım Altın"),

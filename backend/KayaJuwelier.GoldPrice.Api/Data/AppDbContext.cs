@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.PriceGram22K).HasPrecision(10, 4);
             e.Property(x => x.PriceGram21K).HasPrecision(10, 4);
             e.Property(x => x.PriceGram18K).HasPrecision(10, 4);
+            e.Property(x => x.PriceGram14K).HasPrecision(10, 4);
             e.Property(x => x.PriceTroyOz ).HasPrecision(12, 4);
             e.Property(x => x.PriceUsdOz  ).HasPrecision(12, 4);
             e.Property(x => x.EurUsdRate  ).HasPrecision(10, 6);

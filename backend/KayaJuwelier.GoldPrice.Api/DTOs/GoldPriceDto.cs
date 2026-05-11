@@ -5,6 +5,7 @@ public record GoldPriceDto(
     decimal PriceGram22K,
     decimal PriceGram21K,
     decimal PriceGram18K,
+    decimal PriceGram14K,
     decimal PriceTroyOz,
     decimal PriceUsdOz,
     decimal EurUsdRate,

@@ -173,6 +173,7 @@ class _PricesTab extends ConsumerWidget {
               // 21K not in chart model — derive from 22K
               final spark21 = toSpark(chartPoints.map((p) => toDisplay(p.price22K * 21 / 22)).toList());
               final spark18 = toSpark(chartPoints.map((p) => toDisplay(p.price18K)).toList());
+              final spark14 = toSpark(chartPoints.map((p) => toDisplay(p.price18K * 14 / 18)).toList());
 
               final rows = [
                 _GoldRowData('24 Ayar', '999.9',
@@ -187,6 +188,9 @@ class _PricesTab extends ConsumerWidget {
                 _GoldRowData('18 Ayar', '750.0',
                     withComm(toDisplay(price.priceGram18K), '18K'),
                     const Color(0xFF8B6914), spark18),
+                _GoldRowData('14 Ayar', '585.0',
+                    withComm(toDisplay(price.priceGram14K), '14K'),
+                    const Color(0xFF7A5C0A), spark14),
               ];
 
               return ListView(

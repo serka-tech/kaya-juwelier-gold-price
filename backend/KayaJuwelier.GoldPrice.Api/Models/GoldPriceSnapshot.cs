@@ -10,6 +10,7 @@ public class GoldPriceSnapshot
     public decimal  PriceGram22K { get; set; }
     public decimal  PriceGram21K { get; set; }
     public decimal  PriceGram18K { get; set; }
+    public decimal  PriceGram14K { get; set; }
     public decimal  PriceTroyOz  { get; set; }
     public decimal  PriceUsdOz   { get; set; }
     public decimal  EurUsdRate   { get; set; }

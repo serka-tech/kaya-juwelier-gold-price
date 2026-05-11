@@ -6,6 +6,7 @@ public static class GoldPriceCalculator
 {
     private const decimal TroyOzToGrams = 31.1035m;
 
+    public static decimal Calc14K(decimal p24) => Round(p24 * 14m / 24m);
     public static decimal Calc18K(decimal p24) => Round(p24 * 18m / 24m);
     public static decimal Calc21K(decimal p24) => Round(p24 * 21m / 24m);
     public static decimal Calc22K(decimal p24) => Round(p24 * 22m / 24m);
@@ -23,6 +24,7 @@ public static class GoldPriceCalculator
             PriceGram22K: Calc22K(gram24k),
             PriceGram21K: Calc21K(gram24k),
             PriceGram18K: Calc18K(gram24k),
+            PriceGram14K: Calc14K(gram24k),
             PriceTroyOz:  GramToOz(gram24k),
             PriceUsdOz:   Round(usdOz),
             EurUsdRate:   Round(eurUsd),

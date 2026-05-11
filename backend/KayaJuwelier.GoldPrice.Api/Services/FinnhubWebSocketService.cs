@@ -140,6 +140,7 @@ public class FinnhubWebSocketService : BackgroundService
                 PriceGram22K = price.PriceGram22K,
                 PriceGram21K = price.PriceGram21K,
                 PriceGram18K = price.PriceGram18K,
+                PriceGram14K = price.PriceGram14K,
                 PriceTroyOz  = price.PriceTroyOz,
                 PriceUsdOz   = price.PriceUsdOz,
                 EurUsdRate   = price.EurUsdRate,

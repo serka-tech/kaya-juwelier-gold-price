@@ -6,6 +6,7 @@ class GoldPriceModel {
   final double priceGram22K;
   final double priceGram21K;
   final double priceGram18K;
+  final double priceGram14K;
   final double priceTroyOz;
   final double priceUsdOz;
   final double eurUsdRate;
@@ -18,6 +19,7 @@ class GoldPriceModel {
     required this.priceGram22K,
     required this.priceGram21K,
     required this.priceGram18K,
+    required this.priceGram14K,
     required this.priceTroyOz,
     required this.priceUsdOz,
     required this.eurUsdRate,
@@ -31,6 +33,7 @@ class GoldPriceModel {
     priceGram22K: (json['priceGram22K'] as num).toDouble(),
     priceGram21K: (json['priceGram21K'] as num).toDouble(),
     priceGram18K: (json['priceGram18K'] as num).toDouble(),
+    priceGram14K: (json['priceGram14K'] as num? ?? 0).toDouble(),
     priceTroyOz:  (json['priceTroyOz']  as num).toDouble(),
     priceUsdOz:   (json['priceUsdOz']   as num? ?? 0).toDouble(),
     eurUsdRate:   (json['eurUsdRate']    as num? ?? 1.10).toDouble(),
