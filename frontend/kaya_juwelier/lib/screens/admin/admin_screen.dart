@@ -4,9 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/models/commission_model.dart';
 import 'package:kaya_juwelier/providers/commission_provider.dart';
-import 'package:kaya_juwelier/providers/upload_provider.dart';
-import 'package:kaya_juwelier/utils/image_picker_helper.dart';
-import 'package:kaya_juwelier/utils/web_file_input_button.dart';
 
 class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
@@ -25,7 +22,6 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   Widget build(BuildContext context) {
     final token     = ref.watch(authProvider).asData?.value;
     final commAsync = ref.watch(commissionProvider);
-    final manifest  = ref.watch(uploadManifestProvider).asData?.value;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -54,13 +50,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         error: (e, _) => Center(
             child: Text('Hata: $e',
                 style: const TextStyle(color: AppTheme.priceDown))),
-        data: (commMap) => _buildBody(token, commMap, manifest),
+        data: (commMap) => _buildBody(token, commMap),
       ),
     );
   }
 
-  Widget _buildBody(
-      String? token, CommissionMap commMap, UploadManifest? manifest) {
+  Widget _buildBody(String? token, CommissionMap commMap) {
     if (commMap.isEmpty) {
       return const Center(
         child: Text('Komisyon verisi bulunamadı.',
@@ -79,29 +74,23 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
 
     return Column(
       children: [
-        // ── Message banner ──────────────────────────────────────────────────
         if (_message != null)
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             width: double.infinity,
             color: _messageIsError ? AppTheme.priceDownBg : AppTheme.priceUpBg,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 Icon(
-                  _messageIsError
-                      ? Icons.error_outline
-                      : Icons.check_circle_outline,
+                  _messageIsError ? Icons.error_outline : Icons.check_circle_outline,
                   color: _messageIsError ? AppTheme.priceDown : AppTheme.priceUp,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
                 Text(_message!,
                     style: TextStyle(
-                      color: _messageIsError
-                          ? AppTheme.priceDown
-                          : AppTheme.priceUp,
+                      color: _messageIsError ? AppTheme.priceDown : AppTheme.priceUp,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     )),
@@ -113,32 +102,25 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ── Logo upload ───────────────────────────────────────────────
-              _sectionHeader('LOGO', Icons.image_outlined),
-              _LogoUploadTile(token: token, manifest: manifest),
-              const SizedBox(height: 20),
-
-              // ── Gram gold ────────────────────────────────────────────────
               _sectionHeader('GRAM ALTIN', Icons.straighten_rounded),
-              ..._buildRows(commMap, gramKeys, token, manifest),
+              ..._buildRows(commMap, gramKeys, token),
               const SizedBox(height: 20),
 
               _sectionHeader('ALTIN PARALAR', Icons.monetization_on_outlined),
-              ..._buildRows(commMap, altinKeys, token, manifest),
+              ..._buildRows(commMap, altinKeys, token),
               const SizedBox(height: 20),
 
               _sectionHeader('REŞAT PARALAR', Icons.workspace_premium_outlined),
-              ..._buildRows(commMap, resatKeys, token, manifest),
+              ..._buildRows(commMap, resatKeys, token),
               const SizedBox(height: 20),
 
               _sectionHeader('TAKILAR', Icons.diamond_outlined),
-              ..._buildRows(commMap, jewlKeys, token, manifest),
+              ..._buildRows(commMap, jewlKeys, token),
               const SizedBox(height: 24),
             ],
           ),
         ),
 
-        // ── Save commissions button ─────────────────────────────────────────
         Container(
           decoration: const BoxDecoration(
             color: AppTheme.surface,
@@ -159,8 +141,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               ),
               icon: _saving
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
+                      width: 18, height: 18,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
                   : const Icon(Icons.save_rounded, size: 20),
@@ -174,16 +155,13 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     );
   }
 
-  List<Widget> _buildRows(CommissionMap commMap, List<String> keys,
-      String? token, UploadManifest? manifest) {
+  List<Widget> _buildRows(CommissionMap commMap, List<String> keys, String? token) {
     return keys
         .where((k) => commMap.containsKey(k))
         .map((k) => _CommissionRow(
               commission: commMap[k]!,
               value: _edits[k] ?? 0,
               onChanged: (v) => setState(() => _edits[k] = v),
-              token: token,
-              imageUrl: manifest?.fullAssetUrl(k),
             ))
         .toList();
   }
@@ -223,10 +201,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       });
       return;
     }
-    setState(() {
-      _saving = true;
-      _message = null;
-    });
+    setState(() { _saving = true; _message = null; });
 
     final err = await ref
         .read(commissionProvider.notifier)
@@ -247,144 +222,24 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
   }
 }
 
-// ── Logo upload tile ──────────────────────────────────────────────────────────
-class _LogoUploadTile extends ConsumerStatefulWidget {
-  final String? token;
-  final UploadManifest? manifest;
-
-  const _LogoUploadTile({this.token, this.manifest});
-
-  @override
-  ConsumerState<_LogoUploadTile> createState() => _LogoUploadTileState();
-}
-
-class _LogoUploadTileState extends ConsumerState<_LogoUploadTile> {
-  bool _uploading = false;
-
-  Future<void> _upload(PickedFile file) async {
-    if (widget.token == null || !mounted) return;
-    setState(() => _uploading = true);
-    final err = await ref
-        .read(uploadManifestProvider.notifier)
-        .uploadLogo(widget.token!, file);
-    if (!mounted) return;
-    setState(() => _uploading = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(err ?? 'Logo güncellendi ✓'),
-      backgroundColor: err == null ? AppTheme.priceUp : AppTheme.priceDown,
-    ));
-  }
-
-  // Mobile fallback
-  Future<void> _pickMobile() async {
-    if (widget.token == null) return;
-    final file = await pickImageFile();
-    if (file == null) return;
-    await _upload(file);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final logoUrl = widget.manifest?.fullLogoUrl();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          // Logo preview
-          Container(
-            width: 72, height: 48,
-            decoration: BoxDecoration(
-              color: AppTheme.goldGlow,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.cardBorder),
-            ),
-            child: logoUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      logoUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: AppTheme.textHint),
-                    ),
-                  )
-                : const Center(
-                    child: Icon(Icons.image_outlined,
-                        color: AppTheme.textHint, size: 24)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Uygulama Logosu',
-                    style: TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(
-                  logoUrl != null ? 'Özel logo kullanılıyor' : 'Varsayılan SVG kullanılıyor',
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          // Upload button
-          _uploading
-              ? const SizedBox(
-                  width: 24, height: 24,
-                  child: CircularProgressIndicator(
-                      color: AppTheme.gold, strokeWidth: 2))
-              : WebFileInputButton(
-                  onFilePicked: _upload,
-                  child: TextButton.icon(
-                    onPressed: _pickMobile, // no-op on web (overlay handles it)
-                    icon: const Icon(Icons.upload_rounded,
-                        size: 16, color: AppTheme.gold),
-                    label: const Text('Değiştir',
-                        style: TextStyle(
-                            color: AppTheme.gold, fontWeight: FontWeight.w700)),
-                  ),
-                ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Commission row with image upload ─────────────────────────────────────────
-class _CommissionRow extends ConsumerStatefulWidget {
+// ── Commission row ────────────────────────────────────────────────────────────
+class _CommissionRow extends StatefulWidget {
   final CommissionModel commission;
   final double value;
   final ValueChanged<double> onChanged;
-  final String? token;
-  final String? imageUrl;
 
   const _CommissionRow({
     required this.commission,
     required this.value,
     required this.onChanged,
-    this.token,
-    this.imageUrl,
   });
 
   @override
-  ConsumerState<_CommissionRow> createState() => _CommissionRowState();
+  State<_CommissionRow> createState() => _CommissionRowState();
 }
 
-class _CommissionRowState extends ConsumerState<_CommissionRow> {
+class _CommissionRowState extends State<_CommissionRow> {
   late TextEditingController _ctrl;
-  bool _uploading = false;
 
   @override
   void initState() {
@@ -407,28 +262,6 @@ class _CommissionRowState extends ConsumerState<_CommissionRow> {
     super.dispose();
   }
 
-  Future<void> _uploadImage(PickedFile file) async {
-    if (widget.token == null || !mounted) return;
-    setState(() => _uploading = true);
-    final err = await ref
-        .read(uploadManifestProvider.notifier)
-        .uploadAsset(widget.token!, widget.commission.assetKey, file);
-    if (!mounted) return;
-    setState(() => _uploading = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(err ?? '${widget.commission.assetLabel} görseli güncellendi ✓'),
-      backgroundColor: err == null ? AppTheme.priceUp : AppTheme.priceDown,
-    ));
-  }
-
-  // Mobile fallback
-  Future<void> _pickMobile() async {
-    if (widget.token == null) return;
-    final file = await pickImageFile();
-    if (file == null) return;
-    await _uploadImage(file);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -442,48 +275,8 @@ class _CommissionRowState extends ConsumerState<_CommissionRow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: image + label + upload button ──────────────────────
           Row(
             children: [
-              // Asset image thumbnail (clickable on mobile)
-              WebFileInputButton(
-                onFilePicked: _uploadImage,
-                child: GestureDetector(
-                  onTap: _pickMobile,
-                  child: Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: AppTheme.goldGlow,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.cardBorder),
-                    ),
-                    child: _uploading
-                        ? const Center(
-                            child: SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.gold, strokeWidth: 2),
-                            ))
-                        : widget.imageUrl != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  widget.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  width: 44, height: 44,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.add_photo_alternate_outlined,
-                                          color: AppTheme.textHint, size: 20),
-                                ),
-                              )
-                            : const Icon(Icons.add_photo_alternate_outlined,
-                                color: AppTheme.textHint, size: 20),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-
-              // Label
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,23 +293,6 @@ class _CommissionRowState extends ConsumerState<_CommissionRow> {
                   ],
                 ),
               ),
-
-              // Upload button
-              WebFileInputButton(
-                onFilePicked: _uploadImage,
-                child: TextButton(
-                  onPressed: _uploading ? null : _pickMobile,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text('Görsel',
-                      style: TextStyle(color: AppTheme.gold, fontSize: 12)),
-                ),
-              ),
-
-              // Percent input
               SizedBox(
                 width: 70,
                 child: TextField(
@@ -530,14 +306,13 @@ class _CommissionRowState extends ConsumerState<_CommissionRow> {
                       fontSize: 14),
                   decoration: InputDecoration(
                     suffixText: '%',
-                    suffixStyle:
-                        const TextStyle(color: AppTheme.textHint, fontSize: 12),
+                    suffixStyle: const TextStyle(
+                        color: AppTheme.textHint, fontSize: 12),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: AppTheme.cardBorder),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -555,8 +330,6 @@ class _CommissionRowState extends ConsumerState<_CommissionRow> {
               ),
             ],
           ),
-
-          // ── Slider ─────────────────────────────────────────────────────────
           Slider(
             value: widget.value.clamp(0, 20),
             min: 0, max: 20, divisions: 200,

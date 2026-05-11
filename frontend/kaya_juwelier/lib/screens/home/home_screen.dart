@@ -13,8 +13,6 @@ import 'package:kaya_juwelier/screens/home/widgets/ticker_strip.dart';
 import 'package:kaya_juwelier/screens/home/widgets/turkish_gold_section.dart';
 import 'package:kaya_juwelier/models/turkish_gold_model.dart';
 import 'package:kaya_juwelier/providers/commission_provider.dart';
-import 'package:kaya_juwelier/providers/upload_provider.dart';
-import 'package:kaya_juwelier/screens/settings/settings_screen.dart';
 import 'package:kaya_juwelier/services/signalr_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -50,7 +48,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: const [
           _PricesTab(),
           _ChartTab(),
-          SettingsScreen(embedded: true),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -58,8 +55,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(ConnectionStatus status, String currency) {
-    final logoUrl = ref.watch(uploadManifestProvider).asData?.value.fullLogoUrl();
-
     return AppBar(
       backgroundColor: AppTheme.surface,
       surfaceTintColor: Colors.transparent,
@@ -72,22 +67,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onPressed: () => Scaffold.of(ctx).openDrawer(),
         ),
       ),
-      title: logoUrl != null
-          ? Image.network(
-              logoUrl,
-              height: 28,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => SvgPicture.asset(
-                'assets/juvkaya-yataylogo.svg',
-                height: 28,
-                fit: BoxFit.contain,
-              ),
-            )
-          : SvgPicture.asset(
-              'assets/juvkaya-yataylogo.svg',
-              height: 28,
-              fit: BoxFit.contain,
-            ),
+      title: SvgPicture.asset(
+        'assets/juvkaya-yataylogo.svg',
+        height: 28,
+        fit: BoxFit.contain,
+      ),
       actions: [
         // Status badge
         Padding(
@@ -135,10 +119,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           icon: Icon(Icons.candlestick_chart_outlined),
           label: 'Grafik',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.tune_rounded),
-          label: 'Ayarlar',
-        ),
       ],
     );
   }
@@ -155,8 +135,6 @@ class _PricesTab extends ConsumerWidget {
     final statsAsync = ref.watch(priceStatsProvider(ChartRange.d1.value));
     final chartAsync = ref.watch(chartDataProvider(ChartRange.d1));
     final commMap    = ref.watch(commissionProvider).asData?.value ?? {};
-    final manifest   = ref.watch(uploadManifestProvider).asData?.value;
-
     return Column(
       children: [
         // ── Ticker strip ───────────────────────────────────────────────
@@ -218,7 +196,6 @@ class _PricesTab extends ConsumerWidget {
                     prices: TurkishGoldCalculator.calculate(price.priceGram22K),
                     currencySymbol: currency == 'EUR' ? '€' : '\$',
                     commMap: commMap,
-                    manifest: manifest,
                   ),
 
                   // ── Karat section header ───────────────────────────────

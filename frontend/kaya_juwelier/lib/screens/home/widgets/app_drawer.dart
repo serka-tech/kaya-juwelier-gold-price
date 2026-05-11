@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
-import 'package:kaya_juwelier/providers/upload_provider.dart';
 
-class AppDrawer extends ConsumerWidget {
+class AppDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
@@ -15,8 +13,7 @@ class AppDrawer extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logoUrl = ref.watch(uploadManifestProvider).asData?.value.fullLogoUrl();
+  Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: AppTheme.surface,
       child: Column(
@@ -39,22 +36,11 @@ class AppDrawer extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                logoUrl != null
-                    ? Image.network(
-                        logoUrl,
-                        height: 44,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => SvgPicture.asset(
-                          'assets/juvkaya-yataylogo.svg',
-                          height: 44,
-                          fit: BoxFit.contain,
-                        ),
-                      )
-                    : SvgPicture.asset(
-                        'assets/juvkaya-yataylogo.svg',
-                        height: 44,
-                        fit: BoxFit.contain,
-                      ),
+                SvgPicture.asset(
+                  'assets/juvkaya-yataylogo.svg',
+                  height: 44,
+                  fit: BoxFit.contain,
+                ),
                 const SizedBox(height: 12),
                 const Text('Altın Fiyat Takip',
                   style: TextStyle(
@@ -81,16 +67,6 @@ class AppDrawer extends ConsumerWidget {
                   label: 'Fiyat Grafiği',
                   selected: selectedIndex == 1,
                   onTap: () { onTap(1); Navigator.pop(context); },
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Divider(color: AppTheme.divider),
-                ),
-                _DrawerItem(
-                  icon: Icons.tune_rounded,
-                  label: 'Ayarlar',
-                  selected: selectedIndex == 2,
-                  onTap: () { onTap(2); Navigator.pop(context); },
                 ),
               ],
             ),
@@ -158,9 +134,7 @@ class _DrawerItem extends StatelessWidget {
               color: selected ? AppTheme.goldGlow : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: selected
-                    ? AppTheme.gold.withAlpha(80)
-                    : Colors.transparent,
+                color: selected ? AppTheme.gold.withAlpha(80) : Colors.transparent,
               ),
             ),
             child: Row(

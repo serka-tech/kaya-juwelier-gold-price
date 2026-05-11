@@ -3,20 +3,23 @@ import 'package:intl/intl.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/models/commission_model.dart';
 import 'package:kaya_juwelier/models/turkish_gold_model.dart';
-import 'package:kaya_juwelier/providers/upload_provider.dart';
+
+// GitHub raw base URL for coin images
+const _ghBase =
+    'https://raw.githubusercontent.com/serka-tech/kaya-juwelier-gold-price/main/assets/';
+
+String _img(String key) => '$_ghBase$key.png';
 
 class TurkishGoldSection extends StatelessWidget {
   final TurkishGoldPrices prices;
   final String currencySymbol;
   final CommissionMap commMap;
-  final UploadManifest? manifest;
 
   const TurkishGoldSection({
     super.key,
     required this.prices,
     this.currencySymbol = '€',
     this.commMap = const {},
-    this.manifest,
   });
 
   @override
@@ -26,56 +29,54 @@ class TurkishGoldSection extends StatelessWidget {
     // Helper: apply commission if exists
     double c(double p, String key) => commMap[key]?.apply(p) ?? p;
 
-    String? img(String key) => manifest?.fullAssetUrl(key);
-
     final pairs = [
       _CoinPair(
         leftName: 'Çeyrek Altın', leftEmoji: '🪙',
-        leftImageUrl: img('ceyrek_altin'),
+        leftImageUrl: _img('ceyrek_altin'),
         leftPrice: fmtDec.format(c(prices.ceyrekAltin, 'ceyrek_altin')),
         leftSub: '1.804g · 22K',
         rightName: 'Çeyrek Reşat', rightEmoji: '🏅',
-        rightImageUrl: img('ceyrek_resat'),
+        rightImageUrl: _img('ceyrek_resat'),
         rightPrice: fmtDec.format(c(prices.ceyrekResat, 'ceyrek_resat')),
         rightSub: '1.804g · 22K',
       ),
       _CoinPair(
         leftName: 'Yarım Altın', leftEmoji: '🪙',
-        leftImageUrl: img('yarim_altin'),
+        leftImageUrl: _img('yarim_altin'),
         leftPrice: fmtDec.format(c(prices.yarimAltin, 'yarim_altin')),
         leftSub: '3.608g · 22K',
         rightName: 'Yarım Reşat', rightEmoji: '🏅',
-        rightImageUrl: img('yarim_resat'),
+        rightImageUrl: _img('yarim_resat'),
         rightPrice: fmtDec.format(c(prices.yarimResat, 'yarim_resat')),
         rightSub: '3.608g · 22K',
       ),
       _CoinPair(
         leftName: 'Tam Altın', leftEmoji: '🪙',
-        leftImageUrl: img('tam_altin'),
+        leftImageUrl: _img('tam_altin'),
         leftPrice: fmtDec.format(c(prices.tamAltin, 'tam_altin')),
         leftSub: '7.216g · 22K',
         rightName: 'Tam Reşat', rightEmoji: '🏅',
-        rightImageUrl: img('tam_resat'),
+        rightImageUrl: _img('tam_resat'),
         rightPrice: fmtDec.format(c(prices.tamResat, 'tam_resat')),
         rightSub: '7.216g · 22K',
       ),
       _CoinPair(
         leftName: 'Gremse Altın', leftEmoji: '🪙',
-        leftImageUrl: img('gremse_altin'),
+        leftImageUrl: _img('gremse_altin'),
         leftPrice: fmtDec.format(c(prices.gremseAltin, 'gremse_altin')),
         leftSub: '18.04g · 22K',
         rightName: '2.5 Reşat', rightEmoji: '🏅',
-        rightImageUrl: img('iki5_resat'),
+        rightImageUrl: _img('iki5_resat'),
         rightPrice: fmtDec.format(c(prices.ikiNokta5, 'iki5_resat')),
         rightSub: '18.04g · 22K',
       ),
       _CoinPair(
         leftName: 'Beşli Altın', leftEmoji: '🪙',
-        leftImageUrl: img('besli_altin'),
+        leftImageUrl: _img('besli_altin'),
         leftPrice: fmtDec.format(c(prices.besliAltin, 'besli_altin')),
         leftSub: '36.08g · 22K',
         rightName: 'Beşli Reşat', rightEmoji: '🏅',
-        rightImageUrl: img('besli_resat'),
+        rightImageUrl: _img('besli_resat'),
         rightPrice: fmtDec.format(c(prices.besliResat, 'besli_resat')),
         rightSub: '36.08g · 22K',
       ),
@@ -135,11 +136,13 @@ class TurkishGoldSection extends StatelessWidget {
           leftName: 'Burma Bilezik',
           leftSub: '22K · gram başına',
           leftPrice: '${fmtDec.format(c(prices.burmaPerGram, 'burma'))} $currencySymbol/g',
-          leftImageUrl: img('burma'),
+          leftEmoji: '💍',
+          leftImageUrl: _img('burma'),
           rightName: 'Ajda / Kibrit',
           rightSub: '22K · gram başına',
           rightPrice: '${fmtDec.format(c(prices.ajdaPerGram, 'ajda'))} $currencySymbol/g',
-          rightImageUrl: img('ajda'),
+          rightEmoji: '📿',
+          rightImageUrl: _img('ajda'),
         ),
         const Divider(height: 1, color: AppTheme.divider),
 
@@ -169,22 +172,20 @@ class TurkishGoldSection extends StatelessWidget {
   }
 }
 
-// ── Coin pair row ─────────────────────────────────────────────────────────────
+// ── Coin pair data ────────────────────────────────────────────────────────────
 class _CoinPair {
-  final String leftName, leftEmoji, leftPrice, leftSub;
-  final String? leftImageUrl;
-  final String rightName, rightEmoji, rightPrice, rightSub;
-  final String? rightImageUrl;
+  final String leftName, leftEmoji, leftImageUrl, leftPrice, leftSub;
+  final String rightName, rightEmoji, rightImageUrl, rightPrice, rightSub;
 
   const _CoinPair({
     required this.leftName,
     required this.leftEmoji,
-    this.leftImageUrl,
+    required this.leftImageUrl,
     required this.leftPrice,
     required this.leftSub,
     required this.rightName,
     required this.rightEmoji,
-    this.rightImageUrl,
+    required this.rightImageUrl,
     required this.rightPrice,
     required this.rightSub,
   });
@@ -299,20 +300,20 @@ class _CoinPairRow extends StatelessWidget {
 
 // ── Per-gram row (Burma / Ajda) ───────────────────────────────────────────────
 class _PerGramRow extends StatelessWidget {
-  final String leftName, leftSub, leftPrice;
-  final String? leftImageUrl;
-  final String rightName, rightSub, rightPrice;
-  final String? rightImageUrl;
+  final String leftName, leftSub, leftPrice, leftEmoji, leftImageUrl;
+  final String rightName, rightSub, rightPrice, rightEmoji, rightImageUrl;
 
   const _PerGramRow({
     required this.leftName,
     required this.leftSub,
     required this.leftPrice,
-    this.leftImageUrl,
+    required this.leftEmoji,
+    required this.leftImageUrl,
     required this.rightName,
     required this.rightSub,
     required this.rightPrice,
-    this.rightImageUrl,
+    required this.rightEmoji,
+    required this.rightImageUrl,
   });
 
   @override
@@ -322,11 +323,11 @@ class _PerGramRow extends StatelessWidget {
         children: [
           Expanded(child: _GramCell(
               name: leftName, sub: leftSub, price: leftPrice,
-              emoji: '💍', imageUrl: leftImageUrl)),
+              emoji: leftEmoji, imageUrl: leftImageUrl)),
           const VerticalDivider(width: 1, color: AppTheme.divider),
           Expanded(child: _GramCell(
               name: rightName, sub: rightSub, price: rightPrice,
-              emoji: '📿', imageUrl: rightImageUrl)),
+              emoji: rightEmoji, imageUrl: rightImageUrl)),
         ],
       ),
     );
@@ -334,15 +335,14 @@ class _PerGramRow extends StatelessWidget {
 }
 
 class _GramCell extends StatelessWidget {
-  final String name, sub, price, emoji;
-  final String? imageUrl;
+  final String name, sub, price, emoji, imageUrl;
 
   const _GramCell({
     required this.name,
     required this.sub,
     required this.price,
     required this.emoji,
-    this.imageUrl,
+    required this.imageUrl,
   });
 
   @override
@@ -389,15 +389,15 @@ class _GramCell extends StatelessWidget {
   }
 }
 
-// ── Reusable coin icon: shows uploaded image or falls back to emoji ────────────
+// ── Coin icon: loads from GitHub, falls back to emoji on error ────────────────
 class _CoinIcon extends StatelessWidget {
-  final String? imageUrl;
+  final String imageUrl;
   final String emoji;
   final Color bgColor;
   final Color borderColor;
 
   const _CoinIcon({
-    this.imageUrl,
+    required this.imageUrl,
     required this.emoji,
     required this.bgColor,
     required this.borderColor,
@@ -412,18 +412,20 @@ class _CoinIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(19),
         border: Border.all(color: borderColor, width: 1),
       ),
-      child: imageUrl != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(19),
-              child: Image.network(
-                imageUrl!,
-                width: 38, height: 38,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-              ),
-            )
-          : Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Image.network(
+          imageUrl,
+          width: 38, height: 38,
+          fit: BoxFit.cover,
+          // Show emoji while loading or on error
+          loadingBuilder: (context, child, progress) =>
+              progress == null ? child
+              : Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+          errorBuilder: (context, error, stackTrace) =>
+              Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+        ),
+      ),
     );
   }
 }
