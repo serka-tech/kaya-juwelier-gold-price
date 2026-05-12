@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kaya_juwelier/core/constants/app_constants.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/models/chart_point_model.dart';
 import 'package:kaya_juwelier/providers/chart_provider.dart';
@@ -69,11 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onPressed: () => Scaffold.of(ctx).openDrawer(),
         ),
       ),
-      title: SvgPicture.asset(
-        'assets/juvkaya-yataylogo.svg',
-        height: 28,
-        fit: BoxFit.contain,
-      ),
+      title: _LogoWidget(height: 28),
       actions: [
         // Status badge
         Padding(
@@ -514,6 +511,26 @@ class _ErrorView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Logo: loads from GitHub, falls back to local SVG ─────────────────────────
+class _LogoWidget extends StatelessWidget {
+  final double height;
+  const _LogoWidget({required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      AppConstants.logoUrl,
+      height: height,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => SvgPicture.asset(
+        'assets/juvkaya-yataylogo.svg',
+        height: height,
+        fit: BoxFit.contain,
       ),
     );
   }

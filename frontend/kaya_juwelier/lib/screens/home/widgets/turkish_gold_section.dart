@@ -93,7 +93,7 @@ class TurkishGoldSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'ALTIN',
+                  'ZİYNET',
                   style: TextStyle(
                     color: AppTheme.textHint,
                     fontSize: 10,

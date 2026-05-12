@@ -9,6 +9,7 @@ Tüm dosyalar **PNG** formatında olmalı ve aşağıdaki isimlerle kaydedilmeli
 
 | Görsel | Dosya Adı |
 |--------|-----------|
+| **Uygulama Logosu** | **`logo.png`** |
 | Çeyrek Altın | `ceyrek_altin.png` |
 | Yarım Altın | `yarim_altin.png` |
 | Tam Altın | `tam_altin.png` |

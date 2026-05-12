@@ -6,6 +6,11 @@ class AppConstants {
     defaultValue: 'http://10.0.2.2:5000',
   );
 
+  // GitHub asset CDN
+  static const String ghAssetsBase =
+      'https://raw.githubusercontent.com/serka-tech/kaya-juwelier-gold-price/main/assets/';
+  static String get logoUrl => '${ghAssetsBase}logo.png';
+
   static String get signalRHubUrl   => '$apiBaseUrl/hubs/goldprice';
   static String get currentPriceUrl => '$apiBaseUrl/api/goldprice/current';
   static String get chartUrl        => '$apiBaseUrl/api/goldprice/chart';

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kaya_juwelier/core/constants/app_constants.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -36,10 +37,15 @@ class AppDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SvgPicture.asset(
-                  'assets/juvkaya-yataylogo.svg',
+                Image.network(
+                  AppConstants.logoUrl,
                   height: 44,
                   fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => SvgPicture.asset(
+                    'assets/juvkaya-yataylogo.svg',
+                    height: 44,
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 const Text('Altın Fiyat Takip',
