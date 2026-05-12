@@ -10,6 +10,12 @@ Tüm dosyalar **PNG** formatında olmalı ve aşağıdaki isimlerle kaydedilmeli
 | Görsel | Dosya Adı |
 |--------|-----------|
 | **Uygulama Logosu** | **`logo.png`** |
+| Altın (Piyasalar) | `altin.png` |
+| Gümüş (Piyasalar) | `gumus.png` |
+| Platin (Piyasalar) | `platin.png` |
+| Paladyum (Piyasalar) | `paladyum.png` |
+| Dolar (Piyasalar) | `dolar.png` |
+| Euro (Piyasalar) | `euro.png` |
 | Çeyrek Altın | `ceyrek_altin.png` |
 | Yarım Altın | `yarim_altin.png` |
 | Tam Altın | `tam_altin.png` |

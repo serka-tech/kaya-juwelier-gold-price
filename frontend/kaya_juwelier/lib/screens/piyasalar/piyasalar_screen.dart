@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:kaya_juwelier/core/constants/app_constants.dart';
 import 'package:kaya_juwelier/core/theme/app_theme.dart';
 import 'package:kaya_juwelier/models/market_model.dart';
 import 'package:kaya_juwelier/providers/market_provider.dart';
@@ -92,6 +93,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Altın',
           symbol: 'XAU',
           emoji: '🥇',
+          imageUrl: '${AppConstants.ghAssetsBase}altin.png',
           asset: market.gold,
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
           unit: '€',
@@ -102,6 +104,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Gümüş',
           symbol: 'XAG',
           emoji: '🥈',
+          imageUrl: '${AppConstants.ghAssetsBase}gumus.png',
           asset: market.silver,
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
           unit: '€',
@@ -113,6 +116,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Platin',
           symbol: 'XPT',
           emoji: '⬜',
+          imageUrl: '${AppConstants.ghAssetsBase}platin.png',
           asset: market.platinum,
           fmt: NumberFormat('#,##0.00', 'de_DE'),
           unit: '€',
@@ -124,6 +128,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Paladyum',
           symbol: 'XPD',
           emoji: '🔘',
+          imageUrl: '${AppConstants.ghAssetsBase}paladyum.png',
           asset: market.palladium,
           fmt: NumberFormat('#,##0.00', 'de_DE'),
           unit: '€',
@@ -144,6 +149,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Dolar',
           symbol: 'USD/TRY',
           emoji: '💵',
+          imageUrl: '${AppConstants.ghAssetsBase}dolar.png',
           asset: market.usdTry,
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
           unit: '₺',
@@ -155,6 +161,7 @@ class _MarketBody extends StatelessWidget {
           name: 'Euro',
           symbol: 'EUR/TRY',
           emoji: '💶',
+          imageUrl: '${AppConstants.ghAssetsBase}euro.png',
           asset: market.eurTry,
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
           unit: '₺',
@@ -300,6 +307,7 @@ class _AssetRow extends StatelessWidget {
   final String name;
   final String symbol;
   final String emoji;
+  final String imageUrl;
   final MarketAssetData asset;
   final NumberFormat fmt;
   final String unit;
@@ -310,6 +318,7 @@ class _AssetRow extends StatelessWidget {
     required this.name,
     required this.symbol,
     required this.emoji,
+    required this.imageUrl,
     required this.asset,
     required this.fmt,
     required this.unit,
@@ -347,9 +356,22 @@ class _AssetRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(17),
                     border: Border.all(color: color.withAlpha(60)),
                   ),
-                  child: Center(
-                      child: Text(emoji,
-                          style: const TextStyle(fontSize: 16))),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(17),
+                    child: Image.network(
+                      imageUrl,
+                      width: 34, height: 34,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (_, child, progress) =>
+                          progress == null
+                              ? child
+                              : Center(child: Text(emoji,
+                                  style: const TextStyle(fontSize: 16))),
+                      errorBuilder: (_, __, ___) =>
+                          Center(child: Text(emoji,
+                              style: const TextStyle(fontSize: 16))),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Column(
