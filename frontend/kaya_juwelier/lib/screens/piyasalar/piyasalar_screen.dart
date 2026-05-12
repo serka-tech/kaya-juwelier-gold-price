@@ -142,64 +142,43 @@ class _MarketBody extends StatelessWidget {
         _SectionHeader(
           icon: Icons.currency_exchange_rounded,
           title: 'DÖVİZ',
-          sub: 'TRY karşılığı',
+          sub: 'Çapraz kur',
         ),
         _TableHeader(isCurrency: true),
         _AssetRow(
-          name: 'Dolar',
-          symbol: 'USD/TRY',
-          emoji: '💵',
-          imageUrl: '${AppConstants.ghAssetsBase}dolar.png',
-          asset: market.usdTry,
+          name: 'Euro',
+          symbol: 'EUR/USD',
+          emoji: '💶',
+          imageUrl: '${AppConstants.ghAssetsBase}euro.png',
+          asset: MarketAssetData(
+            price: market.eurUsd,
+            bid: market.eurUsd > 0 ? market.eurUsd * 0.9998 : 0,
+            ask: market.eurUsd > 0 ? market.eurUsd * 1.0002 : 0,
+            changePercent: 0,
+          ),
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
-          unit: '₺',
-          color: const Color(0xFF4CAF50),
-          unavailable: market.usdTry.price <= 0,
+          unit: '',
+          color: const Color(0xFF2196F3),
+          unavailable: market.eurUsd <= 0,
+          hideUnit: true,
         ),
         const Divider(height: 1, color: AppTheme.divider),
         _AssetRow(
-          name: 'Euro',
-          symbol: 'EUR/TRY',
-          emoji: '💶',
-          imageUrl: '${AppConstants.ghAssetsBase}euro.png',
-          asset: market.eurTry,
+          name: 'Dolar',
+          symbol: 'USD/EUR',
+          emoji: '💵',
+          imageUrl: '${AppConstants.ghAssetsBase}dolar.png',
+          asset: MarketAssetData(
+            price: market.eurUsd > 0 ? 1.0 / market.eurUsd : 0,
+            bid: market.eurUsd > 0 ? (1.0 / market.eurUsd) * 0.9998 : 0,
+            ask: market.eurUsd > 0 ? (1.0 / market.eurUsd) * 1.0002 : 0,
+            changePercent: 0,
+          ),
           fmt: NumberFormat('#,##0.0000', 'de_DE'),
-          unit: '₺',
-          color: const Color(0xFF2196F3),
-          unavailable: market.eurTry.price <= 0,
-        ),
-
-        const SizedBox(height: 8),
-
-        // ── EUR/USD reference ─────────────────────────────────────────
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.swap_horiz_rounded,
-                  size: 15, color: AppTheme.textHint),
-              const SizedBox(width: 8),
-              const Text('EUR/USD',
-                  style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-              const Spacer(),
-              Text(
-                NumberFormat('#,##0.0000', 'de_DE').format(market.eurUsd),
-                style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
+          unit: '',
+          color: const Color(0xFF4CAF50),
+          unavailable: market.eurUsd <= 0,
+          hideUnit: true,
         ),
 
         const SizedBox(height: 8),
@@ -313,6 +292,7 @@ class _AssetRow extends StatelessWidget {
   final String unit;
   final Color color;
   final bool unavailable;
+  final bool hideUnit;
 
   const _AssetRow({
     required this.name,
@@ -324,6 +304,7 @@ class _AssetRow extends StatelessWidget {
     required this.unit,
     required this.color,
     this.unavailable = false,
+    this.hideUnit = false,
   });
 
   @override
@@ -395,7 +376,7 @@ class _AssetRow extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              unavailable ? na : '$unit ${fmt.format(asset.bid)}',
+              unavailable ? na : (hideUnit ? fmt.format(asset.bid) : '$unit ${fmt.format(asset.bid)}'),
               textAlign: TextAlign.end,
               style: TextStyle(
                   color: unavailable ? AppTheme.textHint : AppTheme.textPrimary,
@@ -408,7 +389,7 @@ class _AssetRow extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              unavailable ? na : '$unit ${fmt.format(asset.ask)}',
+              unavailable ? na : (hideUnit ? fmt.format(asset.ask) : '$unit ${fmt.format(asset.ask)}'),
               textAlign: TextAlign.end,
               style: TextStyle(
                   color: unavailable ? AppTheme.textHint : color,

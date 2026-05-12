@@ -62,7 +62,10 @@ builder.Services.AddCors(options =>
                     || host == "127.0.0.1"
                     || host == "10.0.2.2"
                     || host.StartsWith("192.168.")
-                    || host.StartsWith("10.");
+                    || host.StartsWith("10.")
+                    || host.EndsWith(".ngrok-free.app")
+                    || host.EndsWith(".ngrok-free.dev")
+                    || host.EndsWith(".ngrok.io");
             })
             .AllowAnyHeader()
             .AllowAnyMethod()

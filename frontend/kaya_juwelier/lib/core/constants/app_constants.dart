@@ -1,10 +1,24 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html show window;
+
 class AppConstants {
-  // Android emulator uses 10.0.2.2 to reach host machine's localhost
-  // iOS simulator and Web use: http://localhost:5000
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5000',
-  );
+  // On web: use same origin as the page (works with any ngrok/domain)
+  // On Android emulator: use 10.0.2.2
+  static String get apiBaseUrl {
+    if (kIsWeb) {
+      final origin = html.window.location.origin;
+      // If running on localhost dev server, point to backend port
+      if (origin.contains('localhost:') && !origin.contains(':5000')) {
+        return 'http://localhost:5000';
+      }
+      return origin;
+    }
+    return const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:5000',
+    );
+  }
 
   // GitHub asset CDN
   static const String ghAssetsBase =
