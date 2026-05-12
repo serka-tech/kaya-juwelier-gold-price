@@ -23,9 +23,10 @@ class TickerStrip extends ConsumerWidget {
         loading: () => const SizedBox.shrink(),
         error:   (_, __) => const SizedBox.shrink(),
         data: (price) {
-          final fmt2  = NumberFormat('#,##0.00', 'de_DE');
-          final fmt4  = NumberFormat('#,##0.0000', 'de_DE');
+          final fmt2   = NumberFormat('#,##0.00', 'de_DE');
+          final fmt4   = NumberFormat('#,##0.0000', 'de_DE');
           final market = marketAsync.asData?.value;
+          final eurUsd = price.eurUsdRate > 0 ? price.eurUsdRate : 1.10;
 
           final items = <_TickerData>[
             // ALTIN — always available from gold price stream
@@ -66,20 +67,20 @@ class TickerStrip extends ConsumerWidget {
             // DOLAR
             _TickerData(
               label: 'DOLAR',
-              sub: 'USD/TRY',
-              value: market != null && market.usdTry.price > 0
-                  ? '₺ ${fmt4.format(market.usdTry.price)}'
+              sub: 'USD/EUR',
+              value: eurUsd > 0
+                  ? fmt4.format(1.0 / eurUsd)
                   : '—',
-              change: market?.usdTry.changePercent,
+              change: null,
             ),
             // EURO
             _TickerData(
               label: 'EURO',
-              sub: 'EUR/TRY',
-              value: market != null && market.eurTry.price > 0
-                  ? '₺ ${fmt4.format(market.eurTry.price)}'
+              sub: 'EUR/USD',
+              value: eurUsd > 0
+                  ? fmt4.format(eurUsd)
                   : '—',
-              change: market?.eurTry.changePercent,
+              change: null,
             ),
           ];
 
