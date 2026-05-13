@@ -31,8 +31,8 @@ public class CommissionController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Update([FromBody] UpdateCommissionRequest req)
     {
-        if (req.CommissionPercent < 0 || req.CommissionPercent > 100)
-            return BadRequest(new { message = "Komisyon 0-100 arasında olmalıdır." });
+        if (req.CommissionPercent < -50 || req.CommissionPercent > 100)
+            return BadRequest(new { message = "Komisyon -50 ile 100 arasında olmalıdır." });
 
         var item = await _db.AssetCommissions
             .FirstOrDefaultAsync(x => x.AssetKey == req.AssetKey);
@@ -52,7 +52,7 @@ public class CommissionController : ControllerBase
     {
         foreach (var req in requests)
         {
-            if (req.CommissionPercent < 0 || req.CommissionPercent > 100) continue;
+            if (req.CommissionPercent < -50 || req.CommissionPercent > 100) continue;
             var item = await _db.AssetCommissions
                 .FirstOrDefaultAsync(x => x.AssetKey == req.AssetKey);
             if (item == null) continue;

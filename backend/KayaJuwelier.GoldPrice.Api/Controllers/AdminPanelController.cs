@@ -51,18 +51,23 @@ body{background:#111122;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFo
 .card{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:14px;padding:20px;margin-bottom:24px}
 
 /* Commission rows */
-.comm-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1e1e36}
+.comm-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #1e1e36}
 .comm-row:last-child{border-bottom:none}
 .comm-info{flex:1;min-width:0}
 .comm-name{font-size:14px;color:#e0e0e0;font-weight:600}
 .comm-key{font-size:11px;color:#555;margin-top:1px}
 .comm-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.comm-input{width:68px;padding:7px 8px;background:#111122;border:1px solid #333355;border-radius:8px;color:#d4af37;font-size:14px;font-weight:800;text-align:center;outline:none;transition:border .2s}
+.comm-input{width:76px;padding:7px 8px;background:#111122;border:1px solid #333355;border-radius:8px;color:#d4af37;font-size:14px;font-weight:800;text-align:center;outline:none;transition:border .2s}
 .comm-input:focus{border-color:#d4af37}
 .comm-pct{font-size:12px;color:#666}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:#1e1e36;border-radius:2px;outline:none;margin:6px 0 0}
+.comm-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:52px;text-align:center;flex-shrink:0}
+.comm-badge.neg{background:rgba(76,175,80,.15);color:#4caf50}
+.comm-badge.pos{background:rgba(229,57,53,.15);color:#e53935}
+.comm-badge.zero{background:rgba(255,255,255,.06);color:#666}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;outline:none;margin:8px 0 0;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#d4af37;border-radius:50%;cursor:pointer}
 input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#d4af37;border:none;border-radius:50%;cursor:pointer}
+.slider-labels{display:flex;justify-content:space-between;font-size:9px;color:#444;margin-top:2px}
 
 /* Save bar */
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:#1a1a2e;border-top:1px solid #2a2a4a;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -293,22 +298,42 @@ function showPanel(commissions, username) {
 
 function buildRow(key, label, val) {
   const v = parseFloat(val).toFixed(2);
+  const badgeClass = v < 0 ? 'neg' : (v > 0 ? 'pos' : 'zero');
+  const badgeText  = v < 0 ? `İndirim ${v}%` : (v > 0 ? `Fark +${v}%` : 'Değişmez');
   return `
     <div class="comm-row">
       <div class="comm-info">
         <div class="comm-name">${label}</div>
         <div class="comm-key">${key}</div>
-        <input type="range" min="0" max="20" step="0.01" value="${v}"
+        <input type="range" min="-20" max="20" step="0.01" value="${v}"
                oninput="syncFromSlider('${key}',this.value)"
                id="slider_${key}">
+        <div class="slider-labels"><span>-20%</span><span>0</span><span>+20%</span></div>
       </div>
       <div class="comm-right">
-        <input class="comm-input" type="number" min="0" max="100" step="0.01" value="${v}"
+        <input class="comm-input" type="number" min="-50" max="100" step="0.01" value="${v}"
                oninput="syncFromInput('${key}',this.value)"
                id="input_${key}">
         <span class="comm-pct">%</span>
+        <span class="comm-badge ${badgeClass}" id="badge_${key}">${badgeText}</span>
       </div>
     </div>`;
+}
+
+function updateBadge(key, v) {
+  const el = document.getElementById('badge_' + key);
+  if (!el) return;
+  const num = parseFloat(v).toFixed(2);
+  if (v < 0) {
+    el.className = 'comm-badge neg';
+    el.textContent = `İndirim ${num}%`;
+  } else if (v > 0) {
+    el.className = 'comm-badge pos';
+    el.textContent = `Fark +${num}%`;
+  } else {
+    el.className = 'comm-badge zero';
+    el.textContent = 'Değişmez';
+  }
 }
 
 function syncFromSlider(key, val) {
@@ -316,15 +341,17 @@ function syncFromSlider(key, val) {
   values[key] = parseFloat(v);
   const inp = document.getElementById('input_' + key);
   if (inp) inp.value = v;
+  updateBadge(key, parseFloat(v));
   clearStatus();
 }
 
 function syncFromInput(key, val) {
   const v = parseFloat(val);
-  if (isNaN(v) || v < 0 || v > 100) return;
+  if (isNaN(v) || v < -50 || v > 100) return;
   values[key] = v;
   const slider = document.getElementById('slider_' + key);
-  if (slider) slider.value = Math.min(v, 20);
+  if (slider) slider.value = Math.min(Math.max(v, -20), 20);
+  updateBadge(key, v);
   clearStatus();
 }
 
